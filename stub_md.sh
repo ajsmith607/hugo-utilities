@@ -1,30 +1,57 @@
 #!/bin/bash 
 
 # create stub metadata for images and pages based on 
-# Can specify '_' as first command line argument if applicable.
 
-# load common code
-source ./common.sh
+# fieldinfo format:
+#   label_size_changes
+#
+# where:
+#   size: the size of each value in the field
+#   changes: indicates how to transform the value:
+#       e: expand the value
+#       q: quote the value
+#       d: datify the value according to the date pattern defined above
 
-# create any missing metadata files alongside image$s
-find ./ -type f \( -iname \*.jpg -o -iname \*.png \) -print0 | while read -d $'\0' file
-do
-    origdir=${file%/*}
-    origfilename="${file##*/}"
-    origbasename="${origfilename%.*}"
-    mdfilename="${origbasename}.md"
-    mdfile="${origdir}/${mdfilename}" 
-    [ -f "$mdfile" ] || { touch "$mdfile" ; echo "${mdfile} created" ; } 
-done 
+fieldinfo=(
+    seq_0
+    copyNum_0
+    pageNum_0
+    documentPart_2_e
+    pageArea_2_e
+    flags_0_e
+    dates_8_d
+    )
 
-# update Git working tree
-isingitrepo="$(git rev-parse --is-inside-work-tree 2> /dev/null)"
-[ "$isingitrepo" == "true" ] && { git add -A . ; echo "\nThe Git repo tree has been updated accordingly.\n"; }
-# [ "$isingitrepo" == "true" ] && { echo "\nThe Git repo tree has been updated accordingly.\n"; }
+pagelevelfields=(seq, pageNum, dates)
+
+declare -A expands 
+expands[p]="is photograph"
+expands[s]="is scanned"
+expands[n]="no edges visible"
+expands[t]="top edge visible"
+expands[b]="bottom edge visible"
+expands[l]="left edge visible"
+expands[r]="right edge visible"
+expands[f]="visible fold, crease"
+expands[w]="is two page spread"
+expands[c]="is closeup"
+expands[pg]="interior page"
+expands[aa]="front cover"
+expands[ab]="inside front cover"
+expands[zy]="inside back cover"
+expands[zz]="back cover"
+expands[tp]="title page"
+expands[tc]="table of contents"
+expands[dc]="dedication"
+expands[cc]="all content is visible in the image" 
+expands[q1]="first quadrant" 
+expands[q2]="second quadrant"
+expands[q3]="third quadrant"
+expands[q4]="fourth quadrant"
 
 #prepare for recording page level metadata 
 declare -A pagedata 
-pgcontent="---\n"
+#pgcontent="---\n"
 
 # for each metadata file, populate initial data based on filename convention
 find ./ -type f -iname \*.md -print0 | while read -d $'\0' file; do
@@ -77,11 +104,11 @@ find ./ -type f -iname \*.md -print0 | while read -d $'\0' file; do
         mdcontent+="${valstring}\n";
 
         # also include in page data?
-        if [[ ${pagelevelfields[*]} =~ "${label}" ]]; then
-            if [[ ! "${pgcontent}" =~ $valstring ]]; then
-                pgcontent+="${valstring}\n";
-           fi
-        fi
+        #if [[ ${pagelevelfields[*]} =~ "${label}" ]]; then
+        #    if [[ ! "${pgcontent}" =~ $valstring ]]; then
+        #        pgcontent+="${valstring}\n";
+        #   fi
+        #fi
     done
 
     mdcontent+="---\n\n"
@@ -90,38 +117,10 @@ find ./ -type f -iname \*.md -print0 | while read -d $'\0' file; do
     echo -e "${mdcontent}" > "${file}"
     # sed -i "1s/^.*$/${mdcontent}---\n\n/" "${file}" ; # this doesn't work on empty files
 
-    # If an appropriate index file is not already in place, create it with optional '_' from command line 
-    # Does not overwrite existing files, nor will it add to a file to a directory
-    #   where it already exists in the alternate form.
-    ifile="${dir}/${1}index.md"
-    if ! compgen -G "${dir}/*index.md" > /dev/null; then
-        touch "${ifile}"
-    fi
- 
-    pgcontent+="---\n\n"
-    # prepend formatted front matter string to file
-    pgcontent+=`cat "${ifile}"`
-    echo -e "${pgcontent}" > "${ifile}"
- 
 done
 
-# find all non-hidden directories (ingores .git), mindepth 1 excludes CWD
-#find ./ -mindepth 1 -type d -not -path '*/\.*' -print0 | while read -d $'\0' dir 
-#do
-    dirnameonly=${dir##*/}
-    
-    # check for index.md or _index.md
-    ifile="${dir}/*index.md"
-    echo "  ? ${ifile}"
-    #if [[ ! -e "${ifile}" ]] ; then
-    if ! compgen -G "${ifile}" > /dev/null; then
-        echo -e ";" 
-    fi
-    
-#done
-
-pgcontent+="---\n\n"
+# pgcontent+="---\n\n"
 # prepend formatted front matter string to file
-pgcontent+=`cat "${file}"`
-echo -e "${mdcontent}" > "${file}"
+# pgcontent+=`cat "${file}"`
+# echo -e "${pgcontent}" > "${file}"
  

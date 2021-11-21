@@ -1,4 +1,5 @@
 #!/bin/bash
+# original program to take a PDF and generate OCR text
 LC_CTYPE=en_US.utf8
 
 INPUT=$1

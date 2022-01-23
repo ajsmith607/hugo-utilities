@@ -1,12 +1,15 @@
 #!/bin/bash
 
+# basic filename hygene
+detox 
+
 # create markdown metadata files for each image
 touchmds.sh
 
 # use filename conventions to populate 
 # initial citiation metadata
 # appending optional command line argument
-citify.sh $1
+citify.sh "${1}"
 
 # manually edit each image's metadata with image preview
 manualmeta.sh

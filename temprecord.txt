@@ -1,0 +1,30 @@
+Script started on 2022-01-19 16:57:39-05:00 [TERM="dump" TTY="/dev/pts/4" COLUMNS="106" LINES="57"]
+[0;38;5;231;48;5;31;1m adam [0;38;5;31;48;5;236;22m [0;38;5;250;48;5;236m main [0;38;5;236;48;5;240;22m [0;38;5;250;48;5;240m… [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mcode [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mhugo [0;38;5;245;48;5;240;22m [0;38;5;252;48;5;240;1mhugo-utilities [0;38;5;240;49;22m [0mls
+[0m[01;34mbooktranscriber[0m  imagehelper.go  [01;32mme-mvimg.sh[0m   [01;32mpublish.sh[0m     [01;32mstub_md.bak[0m     [01;32mtest-url.sh[0m
+[01;32mcitify.sh[0m        [01;32mimgpre.sh[0m       [01;32mme-stat.sh[0m    readme.md      [01;32mstub_md.sh[0m      [01;32mtextifyscript.sh[0m
+[01;32mclearify.sh[0m      [01;32mindexify.sh[0m     [01;32mme-test.sh[0m    [01;32mrun.sh[0m         temprecord.txt  [01;32mtouchmds.sh[0m
+[01;32mdependencies.sh[0m  [01;32mman2.sh[0m         [01;32mme-watch.sh[0m   [01;32msave.sh[0m        [01;34mtest[0m            [01;32mupdate-git-tree.sh[0m
+explainshell.sh  [01;32mmanualmeta.sh[0m   [01;32mmvimg.sh[0m      [01;32msimpleproc.sh[0m  [01;32mtest.sh[0m
+[01;32mfigify.sh[0m        [01;32mme-clip.sh[0m      [01;32mplanmvimg.sh[0m  [01;32msource.sh[0m      test.txt
+[0;38;5;231;48;5;31;1m adam [0;38;5;31;48;5;236;22m [0;38;5;250;48;5;236m main [0;38;5;236;48;5;240;22m [0;38;5;250;48;5;240m… [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mcode [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mhugo [0;38;5;245;48;5;240;22m [0;38;5;252;48;5;240;1mhugo-utilities [0;38;5;240;49;22m [0mpwd
+/home/adam/Dropbox/business/code/hugo/hugo-utilities
+[0;38;5;231;48;5;31;1m adam [0;38;5;31;48;5;236;22m [0;38;5;250;48;5;236m main [0;38;5;236;48;5;240;22m [0;38;5;250;48;5;240m… [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mcode [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mhugo [0;38;5;245;48;5;240;22m [0;38;5;252;48;5;240;1mhugo-utilities [0;38;5;240;49;22m [0mexit
+exit
+
+Script done on 2022-01-19 16:57:52-05:00 [COMMAND_EXIT_CODE="0"]
+Script started on 2022-01-19 17:23:51-05:00 [TERM="xterm-kitty" TTY="/dev/pts/4" COLUMNS="106" LINES="57"]
+[0;38;5;231;48;5;31;1m adam [0;38;5;31;48;5;236;22m [0;38;5;250;48;5;236m main [0;38;5;236;48;5;240;22m [0;38;5;250;48;5;240m… [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mcode [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mhugo [0;38;5;245;48;5;240;22m [0;38;5;252;48;5;240;1mhugo-utilities [0;38;5;240;49;22m [0mwhoami
+adam
+[0;38;5;231;48;5;31;1m adam [0;38;5;31;48;5;236;22m [0;38;5;250;48;5;236m main [0;38;5;236;48;5;240;22m [0;38;5;250;48;5;240m… [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mcode [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mhugo [0;38;5;245;48;5;240;22m [0;38;5;252;48;5;240;1mhugo-utilities [0;38;5;240;49;22m [0mpwd
+/home/adam/Dropbox/business/code/hugo/hugo-utilities
+[0;38;5;231;48;5;31;1m adam [0;38;5;31;48;5;236;22m [0;38;5;250;48;5;236m main [0;38;5;236;48;5;240;22m [0;38;5;250;48;5;240m… [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mcode [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mhugo [0;38;5;245;48;5;240;22m [0;38;5;252;48;5;240;1mhugo-utilities [0;38;5;240;49;22m [0mls
+[0m[01;34mbooktranscriber[0m  imagehelper.go  [01;32mme-mvimg.sh[0m   [01;32mpublish.sh[0m     [01;32msource.sh[0m       test.txt
+[01;32mcitify.sh[0m        [01;32mimgpre.sh[0m       [01;32mme-stat.sh[0m    readme.md      [01;32mstub_md.bak[0m     [01;32mtest-url.sh[0m
+[01;32mclearify.sh[0m      [01;32mindexify.sh[0m     [01;32mme-test.sh[0m    [01;32mrun.sh[0m         [01;32mstub_md.sh[0m      [01;32mtextifyscript.sh[0m
+[01;32mdependencies.sh[0m  [01;32mman2.sh[0m         [01;32mme-watch.sh[0m   [01;32msave.sh[0m        temprecord.txt  [01;32mtouchmds.sh[0m
+explainshell.sh  [01;32mmanualmeta.sh[0m   [01;32mmvimg.sh[0m      script.txt     [01;34mtest[0m            [01;32mupdate-git-tree.sh[0m
+[01;32mfigify.sh[0m        [01;32mme-clip.sh[0m      [01;32mplanmvimg.sh[0m  [01;32msimpleproc.sh[0m  [01;32mtest.sh[0m
+[0;38;5;231;48;5;31;1m adam [0;38;5;31;48;5;236;22m [0;38;5;250;48;5;236m main [0;38;5;236;48;5;240;22m [0;38;5;250;48;5;240m… [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mcode [0;38;5;245;48;5;240;22m [0;38;5;250;48;5;240mhugo [0;38;5;245;48;5;240;22m [0;38;5;252;48;5;240;1mhugo-utilities [0;38;5;240;49;22m [0mexit
+exit
+
+Script done on 2022-01-19 17:24:01-05:00 [COMMAND_EXIT_CODE="0"]

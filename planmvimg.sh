@@ -4,7 +4,7 @@
 # script for batch moving files and 
 # associated metadata. 
 
-CMD="mvimg.sh"
+CMD="mv"
 OUTFILE=".mvimgplan.sh"
 
 # to be safe, if the file already exists, warn the user

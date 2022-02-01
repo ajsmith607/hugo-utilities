@@ -1,13 +1,16 @@
 #!/bin/bash
 
-# create new repository at Github with REPONAME
-# then call this script with REPONAME as argument
+if [ -z "${1}" ]; then
+    echo "create a new repository at Github with REPONAME"
+    echo "then call this script with REPONAME as the first argument"
+    exit 1
+fi
 
 # for convenience, a function similar to Perl
 die() { echo "$*" 1>&2 ; exit 1; }
 
-USERNAME=ajs17
-REPONAME=$1
+USERNAME="ajs17"
+REPONAME="${1}"
 ORIGIN=git@github.com:"${USERNAME}"/"${REPONAME}".git
 
 hugo new site "${REPONAME}" # creates REPONAME directory
@@ -23,6 +26,6 @@ git remote add origin "${ORIGIN}"
 git remote set-url origin "${ORIGIN}"
 git push -u origin main
 
-echo "REMEMBER to copy over current .envrc"
+echo "*** REMEMBER to create .envrc as needed to set publish directory at Github"
 
 

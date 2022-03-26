@@ -1,81 +1,69 @@
-### File naming convention
 
-#### Goals
 
-    - Facilitate easy and meaningful sorting by filename in a file system browser. 
-    - Encode enough information to understand the nature of the image by scanning filenames. 
-    - Have a structured, predictable format for the filename that is machine readable to automatically populate initial metadata to facilitate publishing.
-    - Make the naming convention easy to understand and easily added/edited. 
+## Directories
 
-The convention is:
-
-    `seq_copyNum_pageNum_documentPart_pageArea_flags_dates.ext`
-
-Where underscores (_) are field separators, and where applicable (flags and dates), multiple values for a field are separated by a dash (-).
-
-Examples:
+    - transcribebooks
+        - Collection of scripts specifically for volume transcription projects, which follow different conventions from simpler projects.
     
-    `12.jpg`
-    `12_5_pg_0_0.jpg`
-    '12_5_pg_q1_t-l-c_18861023-18851024.jpg`
+    - archived
+        - Obsolete scripts.
 
-All but the first variable `seq` are optional. The fields become more specific as you go along, and so in many cases, unneeded fields can simply be left off. Code using this convention should know to expect a variable number of fields. You can also use a default value of `0` in cases where you need to quickly skip over fields for a collection. 
+    - test
+        - Area for test files used in script development. 
 
-A thorough review of the material should be done ahead of time to determine which fields are needed for the project at hand. 
 
-`seq` is an integer, starting at 1, that is essentially a page numbering system that could begin with the front cover and end with the back cover. This is the primary organizing and sorting mechanism for recreating the book in digital format. This is the only part of the base filename specification above that is not optional.
+## General Scripts
 
-`copyNum` is an integer indicating a distinct image that would nonetheless duplicate another's filename. For example, two different images of the same complete page showing all edges, etc.
+    - textifyscript.sh
+        - Runs the script command and once finished, converts its output to plain text
 
-`pageNum` a string that records any actual page number printed on the page. This could maybe include roman numerals without causing too many problems. If there is no such page number, 0 can indicate this and keep our fields fixed. 
+    - previewimage.sh
+        - Preview an image whose path is in the clipboard. Used for opening image from path in VIM. 
 
-`documentPart`
-    pg: simple page, the most commonly used value
-    aa: front cover
-    ab: inside front cover
-    zy: inside back cover
-    zz: back cover
+    - mvplanner.sh
+        - Run within a directory, creates a bash script that can be used to bulk move files. 
 
-    Probably not relevant for my purposes here, but eventually, could get more fine-grained, such as:
 
-    tp: title page
-    tc: table of contents
-    dc: dedication
-    etc.
- 
-`pageArea` can include the following descriptors:
-    cc: the image captures all the content of the page, the most commonly used value
-    q#: the primary quadrant the image falls in, where # is a value 1-4;
+## Git Scripts
 
-    Quadrants map to the page as you would expect:
+    - publish.sh "COMMITMESSAGE" "true"
+        - second argument is optional override of Git check for uncommitted changes. 
+        - calls the following scripts:
 
-    ---------
-    | 1 | 2 |
-    ---------
-    | 3 | 4 |
-    ---------
+        - updatehugo.sh "true"
+            - Checks for uncommitted changes in dependent repositories, updates Hugo modules and runs the Hugo static site generator.
+            - optional argument overrides Git check for uncommitted changes. 
 
-    If an image falls equally in multiple quadrants, the first applicable quandrant (uppermost, leftmost) should be specified.
+        - push.sh "COMMITMESSAGE"
+            - runs commit.sh:
+            - commit.sh "COMMITMESSAGE"
+                - Does a complete Git tree update and commits.
+            - pushes to origin 
 
-    This is used to help orient people to where closeups are taken from.
-    
-`flags` describe certain visual aspects of the image artifact and can include any of the following:
-    p: is photograph
-    s: is scanned
-    n: no edges visible
-    t: top edge visible
-    b: bottom edge visible
-    l: left edge visible
-    r: right edge visible
-    f: visible fold, crease
-    w: is two page spread
-    c: is closeup
 
-`dates` can be a multivalued set of dates in dash separated strings in the format YYYYMMDD. Examples of possible common situations include:
-    1. A single date value, say, for a diary entry.
-    2. Two dates: a start and end date, might make sense.
-    3. An arbitrary number of dates, possibly capped at a small number for practical reasons.
+## Hugo Scripts
 
-`ext` is the relevant image filename extension, if applicable.
+    - newhugosite.sh REPONAME
+        - After creating REPONAME at Github, run this script wth REPONAME to create hugo site and commit to Github.
 
-Code that uses this could provide a template based on the complete 
+    - run.sh
+        - Invokes the hugo server on port 1313.
+
+    - simpleproc.sh
+        - Runs the following: 
+
+            - touchmds.sh
+                - Creates markdown metadata files for each image in the current directory. Skips existing files. 
+
+            - citify.sh
+                - For each metadata file created above, without existing front matter, pre-populate initial metadata based on filename convention.
+                - Added metadata is prepended to any existing file content, such as automatically generated transcriptions.
+
+            - editmetadata.sh
+                - In the current directory, simultaneously open a metadata file for editing alongside a preview of the corresponding image.
+                - Once editing is completed, writing and quitting vi continues the loop through the files. 
+                - Passing -t flag will make script track files that have been edited so that large jobs can be restarted without losing one's place. 
+
+            - figify.sh
+                - Prepopulate figure shortcodes for all images in current working directory, append to a file called '.figifytmp' and add to the system clipboard.
+        

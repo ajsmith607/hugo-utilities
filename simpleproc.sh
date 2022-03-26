@@ -12,7 +12,7 @@ touchmds.sh
 citify.sh "${1}"
 
 # manually edit each image's metadata with image preview
-manualmeta.sh
+editmetadata.sh
 
 # generate fig shortcodes for each image, 
 # appending out to a file and appending to clipboard

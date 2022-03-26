@@ -2,7 +2,6 @@
 
 # for each metadata file, pre-populate initial metadata based on filename convention
 # metadata is prepended to any existing file content
-# then immediately open metadata file for editing in vi and display the corresponding image
 
 app=${1}
 

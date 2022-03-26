@@ -2,7 +2,7 @@
 
 # check for uncomitted changed in a dependent repo
 # or override this safety feature
-if [ -z "$2" ]; then
+if [ -z "${1}" ]; then
     depRepo="../hugo-min-components"
     if [ ! `realpath "${depRepo}"` == ${PWD} ]; then
         if [[ `git -C "${depRepo}" status --porcelain --untracked-files=no` ]]; then

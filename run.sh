@@ -1,3 +1,3 @@
 #!/bin/bash
 
-hugo server -D --disableFastRender --navigateToChanged 
+hugo server -D --logFile ../log.txt --disableFastRender --navigateToChanged 

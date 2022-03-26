@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# preview an image whose path is in the clipboard
+# used for opening image from path in VIM 
+
 CLIP=""
 PRIORCLIP=""
 

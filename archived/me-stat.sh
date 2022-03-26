@@ -1,18 +1,18 @@
 #!/bin/bash
-# run in top level headless resource folder 
-# containing /data and /metadata folders
+# run in top level headless asset folder 
+# containing images and markdown files /data and /metadata folders
 # evaluates all resource files to discover and report:
 #   - metadata files without corresponding images
 #   - images without corresponding metadata files
 
-find $PWD/metadata -type f \( -iname "*.md" ! -iname "*index.md" \) > md.txt 
+find "${PWD}" -type f \( -iname "*.md" ! -iname "*index.md" \) > md.txt 
 # use pipes as expression separators here because path when $PWD expands contains slashes
 sed -i "s|$PWD/||g" md.txt
 sed -i "s/.md//g" md.txt 
 sort -o md.txt md.txt 
 
-find "$PWD/data" -type f \( -iname "*.jpg" -o -iname "*.png" \) > img.txt 
-sed -i "s|$PWD/data/||g" img.txt 
+find "${PWD}" -type f \( -iname "*.jpg" -o -iname "*.png" \) > img.txt 
+sed -i "s|${PWD}/data/||g" img.txt 
 sed -i "s/.jpg//g" img.txt 
 sed -i "s/.png//g" img.txt 
 sort -o img.txt img.txt 

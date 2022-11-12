@@ -14,6 +14,10 @@ if [ -z "${1}" ]; then
     fi
 fi
 
+# Hugo user manual suggests completely deleting publish directory
+#rm -rf ./docs
+#rm -rf ./public
+
 # update modules
 hugo mod get -u
 

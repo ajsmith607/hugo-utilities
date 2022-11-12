@@ -29,11 +29,19 @@ while getopts option_config options; do   # Loop: Get the next option;
 done
 
 function editmetadata {
+    # don't run this function if a .stop file exists 
+    # this is admittedly a stupid way to end a session
+    # (still makes multiple calls) 
+    # but its simple and ultimately does what I want
+    if [[ -f ".stop" ]]; then
+        exit
+    fi
+    
     mdfile=${1%.*}.md
     TRACKFILE=edittracking.txt
     TRACK=${3}
     if [[ ${TRACK} -gt 0 ]]; then
-        if [ $(grep -q "^${mdfile}"'$' "${TRACKFILE}") ]; then echo "skipping: ${mdfile}"; return; fi
+        if $(grep -q "^${mdfile}\$" "${TRACKFILE}") ; then echo "skipping: ${mdfile}"; return; fi
     fi 
 
     currwinid=${2}

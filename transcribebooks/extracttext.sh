@@ -1,8 +1,6 @@
 #!/bin/bash
-LC_CTYPE=en_US.utf8
+# more current stand alone version
 
-IFS='%' # preserves whitespace in shell command output (for tesseract)
-   
 FULLPATH=$(echo $1 | sed 's:/*$::')
 IMAGESDIR=$2
 SEQNUM=$3
@@ -13,7 +11,11 @@ OUTFILE=$FULLPATH/$SEQNUM
 TMPFILE=$OUTFILE.txt
 MDFILE=$OUTFILE.md
   
-tesseract -c page_separator="" $IMAGE $OUTFILE 
+#LC_CTYPE=en_US.utf8
+#IFS='%' # preserves whitespace in shell command output (for tesseract)
+
+tesseract -c page_separator="" $IMAGE $TMPFILE 
+# TMPFILE was OUTFILE in the line above? 
 
 # remove any end-of-line hyphenations to re-join words
 # (loops over file)

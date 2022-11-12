@@ -3,6 +3,8 @@
 # basic filename hygene
 detox 
 
+pdftojpg.sh
+
 # create markdown metadata files for each image
 touchmds.sh
 

@@ -5,7 +5,7 @@
 
 app=${1}
 
-find ./ -type f -iname \*.md -print0 | while read -d $'\0' file; do
+find ./ -type f -iname \*.md -print0 | sort -z | while read -d $'\0' file; do
 
     # if this file already has front matter defined, skip over file to be safe
     # check first line for front matter start string: "---"
@@ -24,11 +24,13 @@ find ./ -type f -iname \*.md -print0 | while read -d $'\0' file; do
    
     # replace dashes with spaces, title case, and append any command line argument
     citetext="${citetext//-/ }"
-    citetext=`echo "${citetext}" | sed 's/[^ ]\+/\L\u&/g'`
-    citetext="${citetext} $app"  
+    # citetext=`echo "${citetext}" | sed 's/[^ ]\+/\L\u&/g'`
+    if [ -n "${app}" ]; then
+        citetext="${citetext} ${app}"  
+    fi
     
     # prepend formatted front matter string to file
-    mdcontent="---\ncitation: \"${citetext}\"\n---\n\n"
+    mdcontent="---\ncitation: \"${citetext}.\"\n---\n\n"
     mdcontent+=`cat "${file}"`
     echo -e $mdcontent > $file
 

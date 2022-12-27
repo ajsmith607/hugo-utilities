@@ -1,63 +1,69 @@
 #!/bin/bash
 
 # find unused images in Markdown content files
-# first param is path to asset dir
-# second param is path to content dir/file to search for each file
 # the script makes extensive use of bash shell parameter expansions
 # https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
 
 # check that we have the expected (2) parameters
-if [[ -z ${1} ]]  || [[ ! $# -eq 2 ]]; then
-    echo "usage: ./${0##*/} <path-to-asset-dir> <path-to-content-dir>"
+if [[ ! $# -eq 2 ]]; then
+    echo "usage: ./${0##*/} <path-to-image-dir> <path-to-content-dir>"
     exit 1
 fi
 
 IMGDIR="${1}" 
 MDDIR="${2}"
 OUTFILE="./.unused-images.txt"
+CLIPPATHAFTER="images/"
 
 # check that both parameters are valid paths
 if [ ! -e "${IMGDIR}" ]; then
     echo "${IMGDIR} doesn't exist."
     exit 1
 fi
-
 if [ ! -e "${MDDIR}" ]; then
     echo "${MDDIR} doesn't exist."
     exit 1
 fi
 
+# cd "${ASSETDIR}" || return 
 # get all image files to search for 
 ALLIMGS=()
 mapfile -d '' ALLIMGS < <(find "${IMGDIR}" -type f \( -iname "*.jpg" -o -iname "*.png" \) -print0) 
+
+# sort the array
+IFS=$'\n' 
+ALLIMGS=($(sort <<<"${ALLIMGS[*]}"))
+unset IFS
 
 # convert image paths to basenames
 # and search content files for it
 # if found, remove from array
 imglength=${#ALLIMGS[@]}
-#echo "${imglength} total images."
+echo "${imglength} total images."
 for (( i=0; i<imglength; i++ )); do
     figpath=${ALLIMGS[$i]}
-    figpath=${figpath#"./"} 
-    figpath=${figpath#"assets/"} 
-    figpath=${figpath#"images/"} 
-    #figpath=${figpath##*/}
-    figpath=${figpath%.*}
+    # trim unnecessary base paths
+    # figpath=${figpath#"${ASSETDIR}"} 
+    figpath=${figpath#*"${CLIPPATHAFTER}"}
+    # remove extension
+    figpath=${figpath%.*}   
     # -q quiet -r recursive
     # exit code 1 if no lines are selected
+    echo "figpath: ${figpath}"
     if grep -qr "${figpath}" "${MDDIR}"; then
-        unset ALLIMGS[$i]
+        unset "ALLIMGS[$i]"
     else
-        # trim unnecessary base paths
         ALLIMGS[$i]="{{% fig \"${figpath}\" \"500\" /%}}"
     fi
 done
 
-# echo "${ALLIMGS[*]}"
-# imglength=${#ALLIMGS[@]}
-# echo "${imglength} unused images."
+imglength=${#ALLIMGS[@]}
+echo "${imglength} unused images."
 printf "%s\n" "${ALLIMGS[@]}" | xsel -ib 
+# return to original directory that script was invoked from
+# cd -
 xsel > ${OUTFILE}
-vi ${OUTFILE}
+# vi ${OUTFILE}
 
+  
 

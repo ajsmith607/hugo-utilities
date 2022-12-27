@@ -7,6 +7,6 @@ do
     basepath=${file%.*}
     outfile="${basepath}-%03d.jpg"
     # convert -units PixelsPerInch -quality 100 -density 300 -antialias "${file}" -scene 1 -resize 1200x "${outfile}"
-    convert -units PixelsPerInch -quality 100 -density 300 -antialias "${file}" -scene 1 "${outfile}"
+    convert -units PixelsPerInch -quality 100 -density 600 -antialias "${file}" -scene 1 "${outfile}"
 done 
 

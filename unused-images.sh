@@ -25,7 +25,6 @@ if [ ! -e "${MDDIR}" ]; then
     exit 1
 fi
 
-# cd "${ASSETDIR}" || return 
 # get all image files to search for 
 ALLIMGS=()
 mapfile -d '' ALLIMGS < <(find "${IMGDIR}" -type f \( -iname "*.jpg" -o -iname "*.png" \) -print0) 
@@ -59,11 +58,8 @@ done
 
 imglength=${#ALLIMGS[@]}
 echo "${imglength} unused images."
-printf "%s\n" "${ALLIMGS[@]}" | xsel -ib 
-# return to original directory that script was invoked from
-# cd -
-xsel > ${OUTFILE}
-# vi ${OUTFILE}
+printf "%s\n" "${ALLIMGS[@]}" > ${OUTFILE}  
+xsel -ib < ${OUTFILE}
 
   
 

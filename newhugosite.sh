@@ -15,7 +15,7 @@ ORIGIN=git@github.com:"${USERNAME}"/"${REPONAME}".git
 
 hugo new site "${REPONAME}" # creates REPONAME directory
 cd "${REPONAME}" || die "no directory named ${REPONAME}"
-printf ".envrc\n" > .gitignore 
+printf ".envrc\nresources\n" > .gitignore 
 
 hugo mod init github.com/"${USERNAME}"/"${REPONAME}"
 git init

@@ -4,7 +4,7 @@
 # metadata is prepended to any existing file content
 
 app=${1}
-INIT=.init.md
+INIT=".init.md"
 
 find ./ -type f -iname \*.md -print0 | sort -z | while read -d $'\0' file; do
 
@@ -45,4 +45,4 @@ find ./ -type f -iname \*.md -print0 | sort -z | while read -d $'\0' file; do
     fi
 done
 
-mv .init.md .init.bac
+mv "$INIT" .init.bac

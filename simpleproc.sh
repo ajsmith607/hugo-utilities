@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # basic filename hygene
-detox * 
+detox -r ./* 
 
 pdftojpg.sh
 

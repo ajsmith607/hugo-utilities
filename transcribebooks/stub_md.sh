@@ -113,7 +113,7 @@ find ./ -type f -iname \*.md -print0 | while read -d $'\0' file; do
 
     mdcontent+="---\n\n"
     # prepend formatted front matter string to file
-    mdcontent+=`cat "${file}"`
+    mdcontent+=$(cat "$file")
     echo -e "${mdcontent}" > "${file}"
     # sed -i "1s/^.*$/${mdcontent}---\n\n/" "${file}" ; # this doesn't work on empty files
 

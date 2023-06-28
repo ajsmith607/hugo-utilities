@@ -3,7 +3,11 @@
 # basic filename hygene
 detox -r ./* 
 
+# extract individual pages of PDFs as seperate images
 pdftojpg.sh
+
+# optimize large image files
+process-large-images.sh 5M
 
 # create markdown metadata files for each image
 touchmds.sh

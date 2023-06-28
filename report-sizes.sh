@@ -1,11 +1,30 @@
 #!/bin/bash
 
-echo "****************"
-echo "10 LARGEST FILES OVER 5M ON DISK:"
-# find ./ -type f \(-iname \*.jpg -o -iname \*.png \) -size +"$FILESIZE"  | wc -l
 
-find ./content -type f -size +6M -exec du -h '{}' + | sort -hr | head -10
-printf "\n"
+FILESIZE=7M
+if [[ -n "$1" ]]; then
+    FILESIZE="${1}"
+fi
+
+BATCHSIZE=10
+if [[ -n "$2" ]]; then
+    BATCHSIZE="${2}"
+fi
+
+# basic filename hygene
+# detox -r ./* 
+
+
+echo "****************"
+
+COUNT=$(find ./content -type f \( -iname \*.jpg -o -iname \*.png \) -size +"$FILESIZE"  | wc -l)
+
+if [ "$COUNT" -gt 0 ]; then
+    echo "There are $COUNT files over $FILESIZE."
+    echo "Getting $BATCHSIZE largest."
+    find ./content -type f \( -iname \*.jpg -o -iname \*.png \) -size +"$FILESIZE" -exec du -h '{}' + | sort -hr   
+    printf "\n"
+fi
 
 printf "REPO INFO: "
 # echo "$(git merge-base HEAD origin/main)..HEAD" | git pack-objects --revs --thin --stdout --all-progress-implied -q | wc -c | numfmt --to iec 

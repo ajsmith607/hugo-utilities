@@ -8,6 +8,6 @@
 #echo "memills.com" > ./docs/CNAME
  
 updatehugo.sh "${2}"
-push.sh "${1}" 
 report-sizes.sh
+push.sh "${1}" 
 echo "TODO: save should have exit code that publish checks"

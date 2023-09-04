@@ -6,6 +6,9 @@ detox -r ./*
 # extract individual pages of PDFs as seperate images
 pdftojpg.sh
 
+# download any saved URLS
+# dl-nys.sh
+
 # optimize large image files
 process-large-images.sh 5M
 

@@ -51,7 +51,7 @@ find ./ -type f -iname \*.md -print0 | sort -z | while read -d $'\0' file; do
     # prepend formatted front matter string to file
     mdcontent="---\ncitation: \"${citetext}.\"\n---\n\n"
     mdcontent+=`cat "${file}"`
-    echo -e $mdcontent > $file
+    echo -e "$mdcontent" > "$file"
 
 done
 

@@ -9,7 +9,7 @@ fi
 # for convenience, a function similar to Perl
 die() { echo "$*" 1>&2 ; exit 1; }
 
-USERNAME="ajs17"
+USERNAME="ajsmith607"
 REPONAME="${1}"
 ORIGIN=git@github.com:"${USERNAME}"/"${REPONAME}".git
 
@@ -26,6 +26,7 @@ git remote add origin "${ORIGIN}"
 git remote set-url origin "${ORIGIN}"
 git push -u origin main
 
-echo "*** REMEMBER to create .envrc as needed to set publish directory at Github"
+echo "*** REMEMBER to create .envrc as needed and to set publish directory at Github"
+
 
 

@@ -24,5 +24,6 @@ done && echo -e "#!/bin/bash\n\n${LINES}") > "$OUTFILE"
 
 vi "$OUTFILE"
 
-echo "The file has been saved as ${OUTFILE}"
-echo "When ready to run, remember to chmod +x ${OUTFILE}"
+chmod +x "$OUTFILE"
+
+echo "The file has been saved as ${OUTFILE} and is executable."

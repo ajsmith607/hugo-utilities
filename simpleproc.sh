@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # basic filename hygene
-detox -r ./* 
+deto -r ./* 
 
 # extract individual pages of PDFs as seperate images
 pdftojpg.sh

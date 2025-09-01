@@ -2,7 +2,7 @@
 # most current stand alone version
 # expects path to image
 
-LC_CTYPE=en_US.utf8
+LC_CTYPE=en_US.utf8   
 IFS='%' # preserves whitespace in shell command output (for tesseract)
    
 IMAGEFILE=$1
@@ -20,22 +20,7 @@ OUTFILE="${TMPOCRBASENAME}.txt"
 
 tesseract -c page_separator="" "$IMAGEFILE" "$TMPOCRBASENAME" 
 
-# remove any end-of-line hyphenations to re-join words
-# (loops over file)
-sed -i ':a;N;$!ba;s/-\n//g' "$OUTFILE" 
-
-# mark blank paragraph breaks to re-introduce later
-sed -i 's/^\s*$/<BREAK>/g' "$OUTFILE"
-
-# replace any remaining unneeded newlines with single space
-# (loops over file)
-sed -i ':a;N;$!ba;s/\n/ /g' "$OUTFILE"
-
-# add back in paragraph breaks
-sed -i 's/<BREAK>/\n\n/g' "$OUTFILE"
-
-# remove all unneeded leading whitespace
-sed -i 's/^\s*//g' "$OUTFILE"
+ocrfilecleanup.sh "${OUTFILE}"
 
 FINALOUTPUT=$(cat "$OUTFILE")
 # if newlines are an issue, see

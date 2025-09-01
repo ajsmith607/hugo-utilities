@@ -1,6 +1,0 @@
-#!/bin/bash
-
-mvimg2.sh "./t1/test/1.jpg" "./t1/test/1.jpg"
-mvimg2.sh "./t1/test/2.jpg" "./t1/test/2.jpg"
-mvimg2.sh "./t1/test/again/3.jpg" "./t1/test/again/3.jpg"
-

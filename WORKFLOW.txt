@@ -1,0 +1,171 @@
+Primarily bash scripts to automate processing workflow for assets in a Hugo based site using undergo Hugo module.
+
+Implemented to streamline historical researching, writing, and publishing on memills.com .
+
+Primary tools used:
+  
+  - terminal (kitty) with bash scripts
+  - NeoVim (nvim), primary authoring interface
+  - Vim Image Viewer (vimiv)
+  - Gimp, image manipulation 
+
+System tools and libraries:
+
+  - direnv (uses .envrc)
+  - rsync
+  - inotifywait
+  - tesseract
+  - apt packages: kitty direnv git neovim tesseract-ocr inotify-tools libjpeg-turbo-progs jpegoptim oxipng optipng advancecomp zopfli pngcrush pngquant
+  - npm install -g http-server or change stage.sh for a different static web server (may also require changing local server URL in script)
+
+Add hugo-utilities to PATH in .bashrc .
+
+Workflow optimized for three separate terminal "tabs":
+
+   - prep area, shell, vi, gimp, etc.
+   - Hugo root, shell, to run server and other processes
+   - Hugo root, shell, vi to edit content
+
+
+Historical Research/Publication Workflow
+
+Guiding Principles:
+
+  - Begin and center on exploring artifacts. Build context, fill in gaps.
+  - Compress research and writing workflow, compress time!
+  - Automate as much as possible, manually intervene where necessary.
+  - Primarily bash scripts, Unix design philosophy.
+  - An ongoing, iterative, emerging process.
+  - Encourages smaller batch sizes, more frequent iterative cycles.
+  - Payoff of effort is more direct. 
+  - Time is an investment. 
+
+
+Iterative process, 4 Kanban queues:
+
+    1. Research, compile assets and text in isolated "prep" area.
+
+       - images are saved with a file naming convention:
+           
+           - YYYY-MM-DD-Pubname-Pubcity-p#-q#.jpg
+
+           - this helps organize files and supports automated processing
+           - use as much information as is available
+           - use title casing, separate words with dashes
+           - states are two character uppercase abbrevations
+           - p = page, q = quaddress (explained elsewhere)
+
+           - ex: 1850-12-11-Williamsburgh-Daily-Gazette-Brooklyn-NY-p2-q14.jpg
+
+    2. Process assets in the prep area.
+
+       - cd to root of prep directory
+       - see init.vim below, for definition of the nvim commands referenced 
+
+       - double-check filenames
+       - arrange files in a directory structure that mirrors the production site
+
+       - run simpleproc.sh, which recursively:
+
+           - fixes filenames (eliminate spaces, etc.)
+           - extracts jpgs from pdfs
+           - checks for large files and reports them
+           - creates a *.md file for each jpg, with same basename
+           - populates the citation field of each *.md file, using the metadata embedded in the filename 
+           - opens each *.md file in nvim and the correspondig jpg in vimiv in the window next to it
+
+              - <leader>o: from nvim in a *.md file will always open the corresponding image in separate window in vimiv
+              - vimiv is configured with go command (gimp-open) to edit in gimp
+
+              - manually adjust citation field to be properly formatted (my own format), can be left as is, or,
+              - <leader>c: while the cursor is on the citation line will "explode" the citation into individual fields. Verify results.
+              - <leader>r: will paste OCR text of the image below the cursor. Manually correct as needed.
+
+              - quit nvim to move onto next image
+
+           - scripts all have sanity checks built-in to be non-destructive, and therefore, simpleproc can be rerun many times.
+
+       - run merge-images.sh to merge all files in prep space to production assets location in Hugo
+
+           - production image asset location is  $HUGOROOT/content/_assets/images  by convention
+           - run from top level of prep area, relative equivalent to content/_assets/images/
+           
+           - optimizes image file sizes, losslessly, and only replaces files if the result is smaller. Preserves mtimes.
+           - reports on file optimizations made 
+           - rysncs files into the production location, creating directories as needed, not touching existing destination files
+           - (dry runs first to show results and confirm before running)
+           - cleans up the prep space, deleting empty directories, writes a log file of the run
+
+    3. Write
+
+       - in a separate terminal tab:
+
+           - from Hugo root:
+            
+              - vi content/....
+              - <F2>: runs compile-assets.sh: updates asset cache, pastes figified list of new files under cursor, writes buffer
+
+                  - automatically triggers running hugo server to reload asset JSON cache under /data 
+                  - automatically triggers running hugo server to regenerate page content in buffer, browser reloads, navigates to change
+
+                  - last incremental run new asset fig code can also be found in $HUGOROOT/figstoadd.txt 
+
+              - <leader>m: on a fig shortcode path will open the corresponding *.md file 
+              - <leader>o: within a *.md file will open the corresponding image in vimiv
+
+              - continue editing page
+
+        - in a separate terminal tab: 
+
+            - run.sh runs the development server with optimmized environment
+            - compile-assets.sh can also be run here
+
+        - Repeat at step 1 (Research and Compile) until finished
+
+    4. Stage and Publish
+
+        - stage.sh: 
+
+            - updates modules and asset cache, builds site with optimized settings in /docs 
+            - runs an httpd server on /docs, automatically loads the server home in browser 
+
+        - memills has a custom rysnc script that can be run to do a deep merge of all production files, or only the changed generated HTML files (much quicker for fixing typo's in main *.md files, for example)
+
+        - commit and push to github (see commit.sh and push.sh)
+
+        
+
+init.vim configurations supporting the workflow above in NeoVim 
+
+let mapleader = " "
+if !exists('g:startdir') | let g:startdir = expand('$PWD') | endif
+" referenced shell scripts are in hugo-utilities project and assumed to be in user PATH
+
+" <leader>m: open *.md file indicated by the path under the cursor (such as those in fig shortcodes) 
+augroup GHMarkdownFind
+  autocmd!
+  autocmd FileType ghmarkdown execute 'setlocal path+=' . fnameescape(g:startdir . '/**')
+  autocmd FileType ghmarkdown setlocal suffixesadd+=.md
+  autocmd FileType ghmarkdown nnoremap <buffer> <leader>m :execute 'find ' . expand('<cfile>')<CR>
+augroup END
+
+" <leader>c: expode citation on current line
+au FileType ghmarkdown map <leader>c ddk:r ! explode-cite.sh<CR>
+
+" <leader>o: within an .md file, attempt to open corresponding image in vimiv
+au FileType ghmarkdown map <leader>o :!vi-open-image.sh %:p<CR> 
+
+" <leader>r: within an .md file, attempt to OCR corresponding image, paste results under cursor
+au FileType ghmarkdown map <leader>r :.!vi-ocr.sh %:p<CR> 
+
+" <F2>: execute a bash script compile-assets.sh assumed to be in user PATH, 
+"       (undergo/scripts/compile-assets.sh a wrapper of compile-assets.py in the same directory) 
+"       then read file stored in the shell PWD into buffer cursor location, 
+"       then write buffer
+nnoremap <silent> <F2> :execute '! (cd ' . shellescape(g:startdir) . ' && compile-assets.sh)' <Bar> execute 'read ' . fnameescape(g:startdir . '/figstoadd.txt') <Bar> write<CR>
+
+
+
+
+
+

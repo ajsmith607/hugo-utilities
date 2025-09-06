@@ -24,8 +24,24 @@ compile-assets.sh
 # to delete old generated files no longer neeeded
 hugo build --cleanDestinationDir --gc --minify 
 
-cd docs 
 
-http-server &
+# Function to stop both processes
+cleanup() {
+  echo "Stopping process $PID1"
+  kill "$PID1" 
+  wait "$PID1"
+}
 
-cd ..
+# Set up a trap to catch signals and run the cleanup function
+trap cleanup SIGINT SIGTERM
+
+# Start the second process and capture the PID
+http-server docs/ &
+PID1=$!
+echo "Started process with PID $PID1"
+google-chrome "http://127.0.0.1:8089" > /dev/null 2>&1
+
+# Wait for process to finish
+wait $PID1
+
+

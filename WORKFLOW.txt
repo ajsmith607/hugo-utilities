@@ -9,7 +9,7 @@ Primary tools used:
   - Vim Image Viewer (vimiv)
   - Gimp, image manipulation 
 
-System tools and libraries:
+Other system tools and libraries:
 
   - direnv (uses .envrc)
   - rsync
@@ -20,26 +20,44 @@ System tools and libraries:
 
 Add hugo-utilities to PATH in .bashrc .
 
-Workflow optimized for three separate terminal "tabs":
+Workflow optimized for separate terminal "tabs" for a particular project:
 
-   - prep area, shell, vi, gimp, etc.
-   - Hugo root, shell, to run server and other processes
-   - Hugo root, shell, vi to edit content
+   - TABNAME   location,                           , description of primary purpose (documentation string)
+   - COMPILE   prep area (arbitrary, by convention), vi to edit asset metadata, gimp for image optimizations, etc.
+   - DEV/STAGE Hugo root (project),                  CLI to run server,  and other processes
+   - EDIT      Hugo root (project),                  vi to edit page content (links to assets for editing, viewing)
+   - ASSETS    /content/_assets/images,              CLI for asset maintenance tasks
+
+See undergo/layouts/shortcodes/figv2-doc.txt for documentation on the fig shortcode and asset caching in undergo, including Hugo configuration, file naming conventions, etc.
 
 
 Historical Research/Publication Workflow
 
 Guiding Principles:
 
-  - Begin and center on exploring artifacts. Build context, fill in gaps.
   - Compress research and writing workflow, compress time!
+  - Begin and center on exploring artifacts. Build context, fill in gaps.
+  - Don't "write", instead compile/proofread and edit, always be editing!. 
+  - Don't try to create a narrative, simply record and interpret, and allow the narrative to emerge in the reader's mind.
+  - The reader is an active participant in the text. Encourage not just reading, but exploring, discovering for themselves.
+  - "Writing" (really: editing) is an ongoing, iterative, emerging process.
+  - You are constantly reviewing and editing the same material, progressively improving. 
+  - Time spent is directly reflected in the output.
+  - Time is an investment, builds over time. 
   - Automate as much as possible, manually intervene where necessary.
-  - Primarily bash scripts, Unix design philosophy.
-  - An ongoing, iterative, emerging process.
-  - Encourages smaller batch sizes, more frequent iterative cycles.
-  - Payoff of effort is more direct. 
-  - Time is an investment. 
+  - Primarily bash scripts, Unix design philosophy. Extreme simplicity.
+  - Encourages smaller batch sizes, more frequent iterative cycles. Optimizes work time, reduces risks.
 
+Tasks and effort:
+  - Effort pools around asset compiling and editing tasks, specifically:
+      - Downloading and naming assets. Detailed format, but straightforward and relatively mindless, not needing a great deal of intellectual effort, keeping cognitive channels open for parallel multi-tasking with compatible tasks. The effort in this step is an investment that pays off in metadata generation and clear, logical file naming and sorting.
+      - Metadata and image processing before merging, again relatively straightforward, minimal intellectual effort. This is a "writing" process with reusable output, so directly contributes to output now, and is then avaliable to easily add value to other page content in the future.o
+
+  - And the most important task that brings everything together:
+      - Editing! The opposite workflow characterstics of the other two tasks: little infrastructure effort, but heavy intellectual effort needed, requiring focus on multiple cognitive channels.
+      - SPEND THE MOST TIME ON, FOCUS ON, THIS TASK!!!!
+
+Creative resistance is the enemy! Structure the environment and automate to REDUCE/ELIMINATE SOURCES OF RESISTANCE!!!!. (Maximize convenience to maximize productivity.)
 
 Iterative process, 4 Kanban queues:
 
@@ -135,7 +153,7 @@ Iterative process, 4 Kanban queues:
 
         
 
-init.vim configurations supporting the workflow above in NeoVim 
+init.vim configurations in NeoVim supporting the workflow described above
 
 let mapleader = " "
 if !exists('g:startdir') | let g:startdir = expand('$PWD') | endif
@@ -158,11 +176,136 @@ au FileType ghmarkdown map <leader>o :!vi-open-image.sh %:p<CR>
 " <leader>r: within an .md file, attempt to OCR corresponding image, paste results under cursor
 au FileType ghmarkdown map <leader>r :.!vi-ocr.sh %:p<CR> 
 
-" <F2>: execute a bash script compile-assets.sh assumed to be in user PATH, 
+" <F2>: execute compile-assets.sh assumed to be in user PATH, 
 "       (undergo/scripts/compile-assets.sh a wrapper of compile-assets.py in the same directory) 
 "       then read file stored in the shell PWD into buffer cursor location, 
 "       then write buffer
 nnoremap <silent> <F2> :execute '! (cd ' . shellescape(g:startdir) . ' && compile-assets.sh)' <Bar> execute 'read ' . fnameescape(g:startdir . '/figstoadd.txt') <Bar> write<CR>
+
+
+
+
+Historia humana est memoria universi. 
+  - Human history is the memory of the universe.
+
+Universum per homines sui meminit. 
+  - The universe, through humans, remembers itself.
+
+
+
+
+Minimal task management
+
+As with everything else, this is assumed to be within nvim invoked from the Hugo project root. (This simplifies path resolution if we can assume the current working directory where nvim was invoked.)
+
+Two files:
+  - TODO.TASKS
+  - DONE.TASKS
+
+Usually only interact directly with TODO.TASKS, which has a simple text format that leverages the text management efficiencies of vi (nvim) in which much of the work is already being done. 
+
+TODO.TASKS at Hugo root is a list of tasks that need to be completed:
+  - organized into three sections: TODO, COMPLETED, and BACKLOG, 
+  - each task starts with "-" and can be nested for further grouping related tasks visually
+  - comments start with '#' as it is the common convention
+
+
+----
+# TODO.TASKS  (free-form, vi-edited)
+TODO:
+  - items in this list are either entered directly or moved from backlog
+  - thing I will do in this sprint
+    - nested subtask is fine
+  # comments start with '#'
+
+COMPLETED:
+  - finished item (moved here from TODO)
+
+BACKLOG:
+  - long-term idea
+  - another idea
+  - a task
+----
+
+
+Workflow:
+  - new tasks can be added directly to TODO section or BACKLOG
+  - existing tasks in BACKLOG can be moved to TODO
+  - existing tasks in TODO can be moved to COMPLETED
+
+This workflow can benefit from keybindings that facilitate moving items between sections efficiently, either defaulting to the current line under the cursor in normal mode, or a visual mode selection of an arbitrary number of adjacent tasks.
+
+
+----
+" init.vim additions
+" Minimal helpers for simple task management in TODO.TASKS
+
+" Minimal helpers for simple task management in TODO.TASKS
+function! OpenTodoTasks() abort
+  let file = g:startdir . '/TODO.TASKS'
+  if !filereadable(file)
+    call writefile([
+          \ 'TODO:',
+          \ '',
+          \ 'DONE:',
+          \ '',
+          \ 'BACKLOG:',
+          \ ''
+          \ ], getcwd() . '/TODO.TASKS')
+  endif
+  execute 'edit ' . fnameescape(file)
+  " Jump to TODO: section if found
+  if search('^\s*TODO:\s*$', 'w') == 0
+    " fallback: put cursor at top if TODO: not found
+    normal! gg
+  endif
+endfunction
+
+function! s:FindOrCreateSection(name) abort
+  let l:pat = '^\s*' . a:name . ':\s*$'
+  let lnum = search(l:pat, 'nw')
+  if lnum == 0
+    call append(line('$'), '')
+    call append(line('$'), a:name . ':')
+    let lnum = line('$')
+  endif
+  return lnum
+endfunction
+
+function! s:MoveRangeToSection(section) range abort
+  let l:start = a:firstline
+  let l:end   = a:lastline
+  let l:lines = getline(l:start, l:end)
+  execute l:start . ',' . l:end . 'delete _'
+  let l:header = s:FindOrCreateSection(a:section)
+  call append(l:header, l:lines)
+endfunction
+
+" Open TODO.TASKS in CWD; create with section headers if missing
+nnoremap <silent> <leader>to :call OpenTodoTasks()<CR>
+
+" Normal mode: current line
+nnoremap <silent> <leader>tb :<C-U>call <SID>MoveRangeToSection('BACKLOG')<CR>
+nnoremap <silent> <leader>tt :<C-U>call <SID>MoveRangeToSection('TODO')<CR>
+nnoremap <silent> <leader>td :<C-U>call <SID>MoveRangeToSection('DONE')<CR>
+
+" Visual mode: selected range — NOTE the '<,'> to pass the range
+xnoremap <silent> <leader>tb :<C-U>'<,'>call <SID>MoveRangeToSection('BACKLOG')<CR>
+xnoremap <silent> <leader>tt :<C-U>'<,'>call <SID>MoveRangeToSection('TODO')<CR>
+xnoremap <silent> <leader>td :<C-U>'<,'>call <SID>MoveRangeToSection('DONE')<CR>
+----
+
+
+Then, when making a commit in Git,  hugo-utilities/<TODO: final script name>.sh  takes all tasks from the COMPLETED section and:
+  - adds them to a vi buffer for editing as part of the commit message
+  - appends them to the DONE.TASKS file with the commit date as a log file
+  - removes them from the COMPLETED section, which should be empty after every commit
+
+This not only integrates tasks with Git tracking, but keeps the TODO.TASKS file lean and focused.
+
+
+
+
 
 
 

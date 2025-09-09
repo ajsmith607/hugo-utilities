@@ -11,7 +11,7 @@
 set -euo pipefail
 
 # ====== CONFIG ======
-DEST="${HOME}/Dropbox/business/code/hugo/memillstemp/content/_assets/images"   # <-- set this
+DEST="${HOME}/Dropbox/business/code/hugo/memills/content/_assets/images"   # <-- set this
 
 # Optional: exclude patterns (uncomment/edit as needed)
 # List patterns/paths here (relative to CWD). Missing files are fine.

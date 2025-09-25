@@ -1,50 +1,54 @@
 #!/usr/bin/env python3
-# minimal Python commit helper (no hooks)
-# - Reads DONE items from TODO.TASKS (your vi-edited file)
-# - Opens $EDITOR with a prefilled commit message that includes a "# Completed" section
-# - You edit freely; on save+quit it commits with that message
-# - Then it appends the *final edited* "# Completed" lines to DONE.TASKS, dated
-#
-# Usage:
-#   git add -A
-#   ./bin/gcommit.py
-#
-# Config (optional env):
-#   TODO_FILE (default: TODO.TASKS)
-#   DONE_LOG  (default: DONE.TASKS)
-#   GIT_EDITOR / VISUAL / EDITOR (default: vi aliased to nvim)
 
-import os, re, subprocess, sys, tempfile
+# bin/gcommit.py — commit helper with --dry-run and Python 3.7/3.8 typing compatibility
+# - Reads DONE items from TODO.TASKS
+# - Opens $EDITOR with a prefilled message (you edit freely)
+# - On real run: commits with that message and appends the final "# Completed" lines to DONE.TASKS
+# - On --dry-run: shows what would happen, no commit, no file changes
+
+import os
+import re
+import shlex
+import sys
+import tempfile
+import argparse
+import subprocess
 from pathlib import Path
+from typing import List
 
 TODO_FILE = os.environ.get("TODO_FILE", "TODO.TASKS")
 DONE_LOG  = os.environ.get("DONE_LOG",  "DONE.TASKS")
 
-SECTION_CURRENT = re.compile(r'^\s*CURRENT:\s*$', re.I)
+SECTION_TODO = re.compile(r'^\s*TODO:\s*$', re.I)
 SECTION_DONE    = re.compile(r'^\s*DONE:\s*$', re.I)
 SECTION_BACKLOG = re.compile(r'^\s*BACKLOG:\s*$', re.I)
 
-BULLET = re.compile(r'^\s*-\s+(.+?)\s*$')  # capture text after "- "
+BULLET = re.compile(r'^\s*-\s+(.+?)\s*$')   # capture after "- "
 COMMENT_OR_BLANK = re.compile(r'^\s*(#|$)')
 
-def sh(args, **kw):
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("--dry-run", action="store_true", help="build & edit message, but do not commit or write DONE.TASKS")
+    p.add_argument("--no-stage-check", action="store_true", help="skip 'nothing staged' check (useful for formatting tests)")
+    return p.parse_args()
+
+def sh(args: List[str], **kw):
     return subprocess.run(args, check=True, text=True, **kw)
 
-def sh_out(args, **kw) -> str:
+def sh_out(args: List[str], **kw) -> str:
     return subprocess.run(args, check=True, text=True, capture_output=True, **kw).stdout
 
-def extract_done_lines_from_todo(path: Path):
-    """Return list of DONE bullet texts (strings) from TODO.TASKS (current working tree)."""
+def extract_done_lines_from_todo(path: Path) -> List[str]:
     if not path.exists():
         return []
     lines = path.read_text(encoding="utf-8").splitlines()
     in_done = False
-    out = []
+    out: List[str] = []
     for line in lines:
         if SECTION_DONE.match(line):
             in_done = True
             continue
-        if SECTION_CURRENT.match(line) or SECTION_BACKLOG.match(line):
+        if SECTION_TODO.match(line) or SECTION_BACKLOG.match(line):
             in_done = False
         if not in_done:
             continue
@@ -55,24 +59,23 @@ def extract_done_lines_from_todo(path: Path):
             out.append(m.group(1))
     return out
 
-def pick_editor() -> list[str]:
+def pick_editor() -> List[str]:
     for var in ("GIT_EDITOR", "VISUAL", "EDITOR"):
         val = os.environ.get(var)
         if val:
-            return val.split()
+            return shlex.split(val)
     return ["vi"]
 
-def build_initial_message(done_items: list[str]) -> str:
-    parts = []
-    parts.append("")  # subject line left blank; user will write it
+def build_initial_message(done_items: List[str]) -> str:
+    parts: List[str] = []
+    parts.append("")  # subject line placeholder
     parts.append("")  # blank line
     parts.append("# Completed")
     if done_items:
         parts += [f"- {t}" for t in done_items]
     else:
-        parts.append("- ")  # leave an empty bullet as a hint; user can delete it
+        parts.append("- ")
     parts.append("")  # blank
-    # Staged files list (commented)
     try:
         staged = sh_out(["git", "diff", "--cached", "--name-only"]).splitlines()
     except subprocess.CalledProcessError:
@@ -81,9 +84,7 @@ def build_initial_message(done_items: list[str]) -> str:
         parts.append("# Staged files:")
         parts += [f"# {p}" for p in staged]
         parts.append("")
-    # Helpful footer
-    parts.append("# Write subject on the first line. Body below.")
-    parts.append("# Edit the '# Completed' list as desired; those lines will be logged to DONE.TASKS.")
+    parts.append("# First line = subject. Edit '# Completed' freely; those bullets will be logged to DONE.TASKS.")
     return "\n".join(parts) + "\n"
 
 def open_in_editor(initial_text: str) -> str:
@@ -110,16 +111,14 @@ def commit_with_message(msg: str):
         try: os.unlink(p)
         except OSError: pass
 
-def extract_completed_from_message(msg: str) -> list[str]:
+def extract_completed_from_message(msg: str) -> List[str]:
     """
-    From the final edited commit message, pull lines under a '# Completed' header
-    until a blank line or another header line beginning with '# '.
-    Return the bullet texts (without '- ').
+    Pull bullets under a '# Completed' header (until blank line or next '# ' header).
+    Returns plain bullet texts (without '- ').
     """
     lines = msg.splitlines()
-    completed = []
+    completed: List[str] = []
     i = 0
-    # find header
     while i < len(lines) and not re.match(r'^\s*#\s*Completed\s*$', lines[i]):
         i += 1
     if i == len(lines):
@@ -129,7 +128,7 @@ def extract_completed_from_message(msg: str) -> list[str]:
         line = lines[i]
         if line.strip() == "":
             break
-        if re.match(r'^\s*#\s+\S', line):  # another header in body
+        if re.match(r'^\s*#\s+\S', line):
             break
         m = BULLET.match(line)
         if m:
@@ -137,10 +136,9 @@ def extract_completed_from_message(msg: str) -> list[str]:
         i += 1
     return completed
 
-def append_done_log(items: list[str]):
+def append_done_log(items: List[str]):
     if not items:
         return
-    # Use the actual commit date of HEAD for consistency
     try:
         date = sh_out(["git", "show", "-s", "--format=%ad", "--date=format:%F", "HEAD"]).strip()
     except subprocess.CalledProcessError:
@@ -154,26 +152,40 @@ def append_done_log(items: list[str]):
         f.write("\n")
 
 def main():
-    # Ensure there is something staged; otherwise git commit will fail later
-    try:
-        staged = sh_out(["git", "diff", "--cached", "--name-only"]).strip()
-    except subprocess.CalledProcessError:
-        staged = ""
-    if not staged:
-        print("Nothing staged. Use: git add -A   (or stage specific files)", file=sys.stderr)
-        sys.exit(1)
+    args = parse_args()
+
+    if not args.no_stage_check:
+        try:
+            staged = sh_out(["git", "diff", "--cached", "--name-only"]).strip()
+        except subprocess.CalledProcessError:
+            staged = ""
+        if not staged and not args.dry_run:
+            print("Nothing staged. Use: git add -A   (or pass --no-stage-check / --dry-run)", file=sys.stderr)
+            sys.exit(1)
 
     done_items = extract_done_lines_from_todo(Path(TODO_FILE))
     initial = build_initial_message(done_items)
     final_msg = open_in_editor(initial)
-    # Empty/whitespace-only message? Let git enforce policy, but avoid accidental empty
     if not final_msg.strip():
         print("Aborted: empty commit message.", file=sys.stderr)
         sys.exit(1)
 
-    commit_with_message(final_msg)
+    if args.dry_run:
+        sys.stdout.write("----- DRY RUN: final commit message -----\n")
+        sys.stdout.write(final_msg)
+        sys.stdout.write("----- END MESSAGE -----\n")
+    else:
+        commit_with_message(final_msg)
+
     completed = extract_completed_from_message(final_msg)
-    append_done_log(completed)
+
+    if args.dry_run:
+        sys.stdout.write("----- DRY RUN: would append to DONE.TASKS -----\n")
+        for t in completed:
+            sys.stdout.write(f"{t}\n")
+        sys.stdout.write("----- END DONE LIST -----\n")
+    else:
+        append_done_log(completed)
 
 if __name__ == "__main__":
     main()

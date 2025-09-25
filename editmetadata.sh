@@ -1,69 +1,158 @@
 #!/bin/bash
+#
+# editmetadata.sh
+#
+# PURPOSE:
+#   Batch workflow for editing image metadata side-by-side:
+#     • Opens each image in a viewer (default: fim).
+#     • Opens the corresponding .md metadata file in $EDITOR (default: nvim).
+#     • Ensures the viewer does not steal focus (swaymsg restores terminal focus).
+#     • After quitting $EDITOR, kills the viewer (per-file lifecycle).
+#     • Tracks progress in ".edit-state" so the process can be stopped/resumed.
+#
+# BEHAVIOR:
+#   • Files already in .edit-state are normally skipped.
+#   • EXCEPTION: The *last* file in .edit-state is re-opened, in case you exited
+#     $EDITOR before finishing. This lets you double-check your most recent edit.
+#   • Skipped files are echoed at the start; you get ONE pause before the first
+#     real edit (so you can review skip output).
+#   • After every edit (including a re-open), you are prompted before continuing,
+#     unless it was the final file overall.
+#   • At the end, a completion message is shown.
+#
+# REQUIREMENTS:
+#   • sway (Wayland WM) with swaymsg and jq available.
+#   • $VIEWER installed (default: fim).
+#   • $EDITOR installed (default: nvim).
+#
+# OVERRIDES:
+#   Run with environment vars to change defaults:
+#       EDITOR=vim VIEWER=vimiv ./editmetadata.sh
+#
 
-# in the current directory, simultaneously open a metadata file for editing
-# alongside a preview of the corresponding image
-# quitting vi continues the loop through the files 
+set -u
 
-# if -t is passed, the script will track progress by adding file name
-# to text file and checking/skipping these on subsequent runs.
-# see https://www.computerhope.com/unix/bash/getopts.htm
-TRACK=0                                  
-usage() {                                 # Function: Print a help message.
-    echo "Usage: $0 [ -t ]" 1>&2 
+TRACKFILE=".edit-state"
+touch "$TRACKFILE"
+
+# Editor & viewer
+EDITOR_CMD=${EDITOR:-nvim}
+VIEWER=${VIEWER:-fim}
+
+# Sway: container ID of the terminal running this script (for refocus)
+TERMINAL_CON="$(swaymsg -t get_tree | jq -r '.. | select(.focused? == true) | .id' 2>/dev/null || true)"
+
+refocus_terminal() {
+  if [[ -n "${TERMINAL_CON:-}" ]]; then
+    sleep 0.2
+    swaymsg "[con_id=$TERMINAL_CON]" focus >/dev/null 2>&1 || true
+  fi
 }
-exit_abnormal() {                         # Function: Exit with error.
-    usage
-    exit 1
+
+prompt_continue() {
+  while true; do
+    read -rsn1 -p "Press Enter to continue or Esc to quit..." key
+    echo
+    if [[ -z $key ]]; then
+      break
+    elif [[ $key == $'\e' ]]; then
+      echo "Exiting early at user request."
+      exit
+    else
+      echo "Invalid key, try again."
+    fi
+  done
 }
 
-option_config="t"
-while getopts option_config options; do   # Loop: Get the next option;
-    case "${options}" in                    # 
-        t)                                    # If the option is t,
-            TRACK=1
-            ;;
-        *)                                    # If unknown (any other) option:
-            exit_abnormal                       # Exit abnormally.
-            ;;
-  esac
+edit_one() {
+  local imgfile="$1"
+  local mdfile="${imgfile%.*}.md"
+  local idx="$2"
+  local total="$3"
+
+  REOPENED=0
+
+  # Check if already processed
+  if grep -qxF "$mdfile" "$TRACKFILE"; then
+    last_tracked=$(tail -n 1 "$TRACKFILE")
+    if [[ "$mdfile" == "$last_tracked" ]]; then
+      echo "[$idx/$total] Re-opening last edited file: $imgfile <-> $mdfile"
+      REOPENED=1
+      # fall through → treat as an edit
+    else
+      echo "[$idx/$total] Skipping: $imgfile <-> $mdfile"
+      return 1   # skipped
+    fi
+  fi
+
+  echo "[$idx/$total] Editing: $imgfile <-> $mdfile"
+
+  "$VIEWER" "$imgfile" >/dev/null 2>&1 &
+  local ivid=$!
+  trap 'kill '"$ivid"' 2>/dev/null || true' EXIT
+
+  refocus_terminal
+  "$EDITOR_CMD" "$mdfile" +2
+
+  kill "$ivid" 2>/dev/null || true
+  trap - EXIT
+  echo "$mdfile" >> "$TRACKFILE"
+  return 0   # edited
+}
+
+# Collect images (sorted, limited to current dir)
+mapfile -d '' files < <(
+  find . -type f \( -iname '*.jpg' -o -iname '*.png' \) -print0 | sort -z
+)
+
+total=${#files[@]}
+idx=0
+
+first_edit_seen=0
+need_start_pause=0
+
+for path in "${files[@]}"; do
+  file="${path#./}"
+  idx=$((idx+1))
+
+  # If we haven't edited yet, and skips were seen → pause once before first edit
+  if [[ $first_edit_seen -eq 0 && $need_start_pause -eq 1 ]]; then
+    mdfile_candidate="${file%.*}.md"
+    last_tracked=$(tail -n 1 "$TRACKFILE")
+
+    if [[ "$mdfile_candidate" == "$last_tracked" ]]; then
+      prompt_continue
+      need_start_pause=0
+    elif ! grep -qxF "$mdfile_candidate" "$TRACKFILE"; then
+      prompt_continue
+      need_start_pause=0
+    fi
+
+  fi
+
+  if edit_one "$file" "$idx" "$total"; then
+    if [[ $first_edit_seen -eq 0 ]]; then
+      # First edit (new or reopened)
+      first_edit_seen=1
+      if [[ $need_start_pause -eq 0 && $REOPENED -eq 0 && $idx -lt $total ]]; then
+        # Case: no skips, first edit → pause AFTER first edit
+        prompt_continue
+      elif [[ $REOPENED -eq 1 && $idx -lt $total ]]; then
+        # Case: reopened last file → pause AFTER editing
+        prompt_continue
+      fi
+    else
+      # Subsequent edits → pause unless this was the last file
+      if [[ $idx -lt $total ]]; then
+        prompt_continue
+      fi
+    fi
+  else
+    # Skipped
+    if [[ $first_edit_seen -eq 0 ]]; then
+      need_start_pause=1
+    fi
+  fi
 done
 
-function editmetadata {
-    # don't run this function if a .stop file exists 
-    # this is admittedly a stupid way to end a session
-    # (still makes multiple calls) 
-    # but its simple and ultimately does what I want
-    if [[ -f ".stop" ]]; then
-        exit
-    fi
-    
-    mdfile=${1%.*}.md
-    TRACKFILE=edittracking.txt
-    TRACK=${3}
-    if [[ ${TRACK} -gt 0 ]]; then
-        if $(grep -q "^${mdfile}\$" "${TRACKFILE}") ; then echo "skipping: ${mdfile}"; return; fi
-    fi 
-
-    currwinid=${2}
-    vimiv "${1}" & 
-    vimivid=$! # process id of fim background process
-    # return focus to first window after fim is launched so we can use vi
-    # both xdotool commands seem to be needed, 
-    # both before and after killing the background process
-    xdotool windowactivate --sync "$currwinid"
-    xdotool windowfocus --sync "$currwinid"
-    vi "$mdfile" - +":2"
-    kill $vimivid
-    xdotool windowactivate --sync "$currwinid"
-    xdotool windowfocus --sync "$currwinid"
-    if [[ $TRACK -gt 0 ]]; then
-        echo "$mdfile" >> $TRACKFILE
-    fi 
-}
-export -f editmetadata # now visible to bash subshell 
-
-currwinid=$(xdotool getactivewindow) 
-echo "currwinid: ${currwinid}"
-find ./ -type f \( -iname \*.jpg -o -iname \*.png \) -print0 -exec bash -c "editmetadata \"{}\" ${currwinid} ${TRACK}" \; 
-
-exit 0                                    # Exit normally.
+echo "✅ All $total files processed."

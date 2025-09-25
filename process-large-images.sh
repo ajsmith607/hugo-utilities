@@ -1,28 +1,25 @@
 #!/bin/bash
 
-FILESIZE=5M
-if [[ -n "$1" ]]; then
-    FILESIZE="${1}"
-fi
+FILESIZE="${1:-5M}"    # default 5M
+BATCHSIZE="${2:-5}"    # default 5
 
-BATCHSIZE=5
-if [[ -n "$2" ]]; then
-    BATCHSIZE="${2}"
-fi
+# Find files over threshold, sorted by size ascending
+mapfile -t FILES < <(
+    find . -type f \( -iname '*.jpg' -o -iname '*.png' \) -size +"$FILESIZE" \
+        -printf '%s\t%p\n' \
+    | sort -n \
+    | cut -f2
+)
 
-# basic filename hygene
-# detox -r ./* 
-
-COUNT=$(find ./ -type f \( -iname \*.jpg -o -iname \*.png \) -size +"$FILESIZE"  | wc -l)
-
+COUNT=${#FILES[@]}
 echo "There are $COUNT files over $FILESIZE."
-echo "Getting $BATCHSIZE largest."
 
-i=0
-while ((i < BATCHSIZE )); do
-    find ./ -type f \( -iname \*.jpg -o -iname \*.png \) -size +"$FILESIZE" -exec ls -al {} \; | sort -k 5 -n | head -"$BATCHSIZE" | sed 's/ \+/\t/g' | cut -f 9 | xargs gimp
-    ((i=i+BATCHSIZE)) 
-done
-
-
-
+if (( COUNT > 0 )); then
+    echo "Processing in batches of $BATCHSIZE."
+    for ((i=0; i<COUNT; i+=BATCHSIZE)); do
+        batch=( "${FILES[@]:i:BATCHSIZE}" )
+        echo "Opening batch: ${batch[*]}"
+        gimp "${batch[@]}"
+        echo "Closed batch $((i/BATCHSIZE+1))."
+    done
+fi

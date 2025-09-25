@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# in the current directory, recursively open images in vi, and corresponding *.md files in vi
+# so that each metadata file can be edited while viewing the corresponding image 
+# quitting vi, closes both windows, and continues looping through files after confirmation
+# the progress through the files is tracked so the process can be stopped and resumed
+
+export TRACKFILE=".edit-state"
+function editmetadata {
+    mdfile=${1%.*}.md
+    if $(grep -q "^${mdfile}\$" "${TRACKFILE}") ; then echo "skipping: ${mdfile}"; return; fi
+
+    currwinid=${2}
+
+    # iv is image viewer alias configured in .bashrc
+    iv "${1}" & 
+    ivid=$! # process id of fim background process
+    # return focus to first window after fim is launched so we can use vi
+    # both xdotool commands seem to be needed, 
+    # both before and after killing the background process
+    xdotool windowactivate --sync "$currwinid"
+    xdotool windowfocus --sync "$currwinid"
+    vi "$mdfile" - +":2"
+    kill $ivid
+    xdotool windowactivate --sync "$currwinid"
+    xdotool windowfocus --sync "$currwinid"
+    echo "$mdfile" >> $TRACKFILE
+}
+export -f editmetadata # now visible to bash subshell 
+
+currwinid=$(xdotool getactivewindow) 
+echo "currwinid: ${currwinid}"
+
+find . -type f \( -iname '*.jpg' -o -iname '*.png' \) -print0 \
+  | sort -z \
+  | while IFS= read -r -d '' file; do
+      editmetadata "$file" "$currwinid" "$TRACK"
+      # ask user to press enter before continuing or escape to exit loop and quit script
+      while true; do
+          read -rsn1 -p "Press Enter to continue or Esc to quit..." key
+           echo
+           if [[ -z $key ]]; then
+               # Enter pressed (newline means key is empty)
+               break
+           elif [[ $key == $'\e' ]]; then
+               # Esc pressed
+               exit
+           else
+               echo "Invalid key, try again."
+           fi
+       done
+    done
+
+exit 0                                    # Exit normally.

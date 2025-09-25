@@ -27,5 +27,5 @@ FINALOUTPUT=$(cat "$OUTFILE")
 # https://stackoverflow.com/questions/7427262/how-to-read-a-file-into-a-variable-in-shell
 
 # cleanup and return text
-#rm "$TMPOCRBASENAME".txt   
+rm "$TMPOCRBASENAME".txt   
 echo "$FINALOUTPUT"

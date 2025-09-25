@@ -4,9 +4,9 @@ Implemented to streamline historical researching, writing, and publishing on mem
 
 Primary tools used:
   
-  - terminal (kitty) with bash scripts
+  - terminal (kitty, foot) with bash scripts
   - NeoVim (nvim), primary authoring interface
-  - Vim Image Viewer (vimiv)
+  - Fim image viewer (fim)
   - Gimp, image manipulation 
 
 Other system tools and libraries:
@@ -15,18 +15,16 @@ Other system tools and libraries:
   - rsync
   - inotifywait
   - tesseract
-  - apt packages: kitty direnv git neovim tesseract-ocr inotify-tools libjpeg-turbo-progs jpegoptim oxipng optipng advancecomp zopfli pngcrush pngquant
+  - apt packages: kitty foot direnv git neovim tesseract-ocr inotify-tools libjpeg-turbo-progs jpegoptim oxipng optipng advancecomp zopfli pngcrush pngquant fim xdotool xsel autocutsel 
   - npm install -g http-server or change stage.sh for a different static web server (may also require changing local server URL in script)
 
 Add hugo-utilities to PATH in .bashrc .
 
-Workflow optimized for separate terminal "tabs" for a particular project:
+Git annual maintenance and archiving (in this order):
 
-   - TABNAME   location,                           , description of primary purpose (documentation string)
-   - COMPILE   prep area (arbitrary, by convention), vi to edit asset metadata, gimp for image optimizations, etc.
-   - DEV/STAGE Hugo root (project),                  CLI to run server,  and other processes
-   - EDIT      Hugo root (project),                  vi to edit page content (links to assets for editing, viewing)
-   - ASSETS    /content/_assets/images,              CLI for asset maintenance tasks
+  - git gc or git gc --aggressive (git gc safely calls git prune)
+  - git lfs prune (can also test: git lfs prune --dry-run)
+  - Prior to Git repository archiving, perform a separate clone, with an explicitly garbage collected, cleanDestinationDir build and stage test to ensure that pruning and garbage collection were non-destructive.
 
 See undergo/layouts/shortcodes/figv2-doc.txt for documentation on the fig shortcode and asset caching in undergo, including Hugo configuration, file naming conventions, etc.
 
@@ -92,12 +90,12 @@ Iterative process, 4 Kanban queues:
            - populates the citation field of each *.md file, using the metadata embedded in the filename 
            - opens each *.md file in nvim and the correspondig jpg in vimiv in the window next to it
 
-              - <leader>o: from nvim in a *.md file will always open the corresponding image in separate window in vimiv
+              - <leader>mo: from nvim in a *.md file will always open the corresponding image in separate window in vimiv
               - vimiv is configured with go command (gimp-open) to edit in gimp
 
               - manually adjust citation field to be properly formatted (my own format), can be left as is, or,
-              - <leader>c: while the cursor is on the citation line will "explode" the citation into individual fields. Verify results.
-              - <leader>r: will paste OCR text of the image below the cursor. Manually correct as needed.
+              - <leader>ec: while the cursor is on the citation line will "explode" the citation into individual fields. Verify results.
+              - <leader>it: will paste OCR text of the image below the cursor. Manually correct as needed.
 
               - quit nvim to move onto next image
 
@@ -128,8 +126,8 @@ Iterative process, 4 Kanban queues:
 
                   - last incremental run new asset fig code can also be found in $HUGOROOT/figstoadd.txt 
 
-              - <leader>m: on a fig shortcode path will open the corresponding *.md file 
-              - <leader>o: within a *.md file will open the corresponding image in vimiv
+              - <leader>mo: on a fig shortcode path will open the corresponding *.md file 
+              - <leader>iv: within a *.md file will open the corresponding image in vimiv
 
               - continue editing page
 
@@ -155,43 +153,176 @@ Iterative process, 4 Kanban queues:
 
 init.vim configurations in NeoVim supporting the workflow described above
 
-let mapleader = " "
-if !exists('g:startdir') | let g:startdir = expand('$PWD') | endif
-" referenced shell scripts are in hugo-utilities project and assumed to be in user PATH
-
-" <leader>m: open *.md file indicated by the path under the cursor (such as those in fig shortcodes) 
-augroup GHMarkdownFind
-  autocmd!
-  autocmd FileType ghmarkdown execute 'setlocal path+=' . fnameescape(g:startdir . '/**')
-  autocmd FileType ghmarkdown setlocal suffixesadd+=.md
-  autocmd FileType ghmarkdown nnoremap <buffer> <leader>m :execute 'find ' . expand('<cfile>')<CR>
-augroup END
+" ---------------------------------
+" START HISTORY/HUGO workflow shortcuts
 
 " <leader>c: expode citation on current line
-au FileType ghmarkdown map <leader>c ddk:r ! explode-cite.sh<CR>
+au FileType ghmarkdown map <leader>ec ddk:r ! explode-cite.sh<CR>
 
-" <leader>o: within an .md file, attempt to open corresponding image in vimiv
-au FileType ghmarkdown map <leader>o :!vi-open-image.sh %:p<CR> 
-
-" <leader>r: within an .md file, attempt to OCR corresponding image, paste results under cursor
-au FileType ghmarkdown map <leader>r :.!vi-ocr.sh %:p<CR> 
-
-" <F2>: execute compile-assets.sh assumed to be in user PATH, 
+" <F2>: execute a bash script compile-assets.sh assumed to be in user PATH, 
 "       (undergo/scripts/compile-assets.sh a wrapper of compile-assets.py in the same directory) 
 "       then read file stored in the shell PWD into buffer cursor location, 
 "       then write buffer
 nnoremap <silent> <F2> :execute '! (cd ' . shellescape(g:startdir) . ' && compile-assets.sh)' <Bar> execute 'read ' . fnameescape(g:startdir . '/figstoadd.txt') <Bar> write<CR>
 
+" <leader>mo: open *.md file indicated by the path under the cursor (such as those in fig shortcodes) 
+augroup GHMarkdownOpen
+  autocmd!
+  autocmd FileType ghmarkdown execute 'setlocal path+=' . fnameescape(g:startdir . '/content/**')
+  autocmd FileType ghmarkdown setlocal suffixesadd+=.md
+  autocmd FileType ghmarkdown nnoremap <buffer> <leader>mo :execute 'find ' . expand('<cfile>')<CR>
+augroup END
 
+if !exists('g:startdir') | let g:startdir = expand('$PWD') | endif
+if !exists('g:pagedir') | let g:pagedir = '/content/family-of-edward-hallock-mills' | endif
+if !exists('g:imagedir') | let g:imagedir = '/content/_assets/images' | endif
+let g:image_exts = ['jpg','jpeg','png','gif','tif','tiff','bmp','webp']
 
+function! ResolveImagePath(raw)
+  return g:startdir . g:imagedir . '/' . a:raw
+endfunction
 
-Historia humana est memoria universi. 
-  - Human history is the memory of the universe.
+function! FindImage(base)
+  for l:ext in g:image_exts
+    let l:cand = a:base . '.' . l:ext
+    if filereadable(l:cand)
+      return l:cand
+    endif
+  endfor
+  return ''
+endfunction
 
-Universum per homines sui meminit. 
-  - The universe, through humans, remembers itself.
+function! GetBasename()
+  " full path to the current buffer (.md file)
+  let l:bufpath = expand('%:p')
+  " strip extension
+  let l:base = fnamemodify(l:bufpath, ':r')
+  return l:base
+endfunction
 
+function! OpenImage(viewer)
+  let l:raw  = GetBasename() 
+  let l:cand = FindImage(l:raw)
+  if empty(l:cand)
+    echohl ErrorMsg | echom 'No image found for ' . l:raw | echohl None
+    return
+  endif
+  if a:viewer ==# 'gimp'
+    call jobstart('swaymsg workspace 2; exec gimp ' . shellescape(l:cand), {'detach': v:true})
+  else
+    call jobstart([a:viewer,l:cand], {'detach': v:true})
+  endif
+endfunction
 
+function! InsertOcrText()
+  " full path to the current buffer (.md file)
+  let l:bufpath = expand('%:p')
+  " strip extension
+  let l:base = fnamemodify(l:bufpath, ':r')
+
+  " try extensions
+  for l:ext in g:image_exts
+    let l:cand = l:base . '.' . l:ext
+    if filereadable(l:cand)
+      let l:text = system(['ocrimage.sh', l:cand, 'stdout'])
+      call append(line('.'), split(l:text, "\n"))
+      "echom 'Inserted OCR from ' . l:cand
+      return
+    endif
+  endfor
+
+  echohl ErrorMsg | echom 'No image found for base: ' . l:base | echohl None
+endfunction
+
+augroup OpenImageMappings
+  autocmd!
+  " open with fim in current workspace
+  autocmd FileType ghmarkdown nnoremap <buffer> <leader>iv :call OpenImage('fim')<CR>
+  " open with gimp in workspace 2
+  autocmd FileType ghmarkdown nnoremap <buffer> <leader>ie :call OpenImage('gimp')<CR>
+  " insert OCR text under cursor line
+  autocmd FileType ghmarkdown nnoremap <buffer> <leader>it :call InsertOcrText()<CR>
+augroup END
+
+" support for pagelink shortcode    
+" <leader>ps : insert the shortcode boilerplate/skeleton (auto calls pf)
+" <leader>pf : type-ahead search and insert the basename of the desired page
+"              file
+"
+" Inserts the boilerplate and positions cursor before basename
+function! InsertPagelinkSkeleton()
+  " Insert the boilerplate
+  call nvim_put(['{{< pagelink "" "Optional Link Text" >}}'], 'c', v:true, v:true)
+  " Move cursor to the start of the line
+  normal! 0
+  " Search forward for the first "" and land on the first quote
+  call search('""', 'c')
+  " Move cursor one char to the right, inside the quotes
+  "normal! l
+  call InsertPageBasename(g:pagedir)
+endfunction
+
+nnoremap <leader>ps :call InsertPagelinkSkeleton()<CR>
+
+" support for fig shortcode    
+" <leader>fs : insert the shortcode boilerplate/skeleton (auto calls ff)
+" <leader>ff : type-ahead search and insert the basename of the desired
+"              metadata file
+"
+" Inserts the boilerplate and positions cursor before basename
+function! InsertFigSkeleton()
+  " Insert the boilerplate
+  call nvim_put(['{{< fig "" "800" >}}'], 'c', v:true, v:true)
+  " Move cursor to the start of the line
+  normal! 0
+  " Search forward for the first "" and land on the first quote
+  call search('""', 'c')
+  " Move cursor one char to the right, inside the quotes
+  "normal! l
+  call InsertPageBasename(g:imagedir, v:false)
+endfunction
+
+nnoremap <leader>fs :call InsertFigSkeleton()<CR>
+
+function! InsertPageBasename(subpath, ...) abort
+  " Build full path
+  let l:dir = expand(g:startdir . "/" . a:subpath)
+
+  " Base ripgrep command
+  let l:cmd = 'rg --files ' . shellescape(l:dir) . ' --glob "*.md" --glob "!**/*index*.md"'
+
+  " Determine fullstrip (default true)
+  let l:fullstrip = get(a:000, 0, v:true)
+
+  if l:fullstrip
+    " Strip directory + extension
+    let l:cmd .= " | sed 's#.*/##;s/\\.md$//'"
+  else
+    " Strip everything up through subpath/
+    let l:strip = substitute(l:dir, '/', '\\/', 'g')
+    let l:cmd .= " | sed 's#" . l:strip . "/##;s/\\.md$//'"
+  endif
+
+  call fzf#run(fzf#wrap({
+        \ 'source': l:cmd,
+        \ 'sink*': { lines -> s:InsertAtCursor(lines) },
+        \ }))
+endfunction
+
+function! s:InsertAtCursor(lines)
+  if len(a:lines) > 0
+    let l:word = a:lines[0]
+    " Insert exactly at cursor position
+    call nvim_put([l:word], 'c', v:true, v:true)
+  endif
+endfunction
+
+" Map it
+nnoremap <leader>pf :call InsertPageBasename(g:pagedir)<CR>
+nnoremap <leader>ff :call InsertPageBasename(g:imagedir, v:false)<CR>
+
+" END HISTORY workflow shortcuts
+" ---------------------------------
 
 
 Minimal task management
@@ -245,13 +376,16 @@ function! OpenTodoTasks() abort
   let file = g:startdir . '/TODO.TASKS'
   if !filereadable(file)
     call writefile([
+          \ '# TODO: current prioritized tasks',
           \ 'TODO:',
           \ '',
+          \ '# DONE: will be included in next commit message',
           \ 'DONE:',
           \ '',
+          \ '# BACKLOG: tasks not yet prioritized for immediate work',
           \ 'BACKLOG:',
           \ ''
-          \ ], getcwd() . '/TODO.TASKS')
+          \ ], file)
   endif
   execute 'edit ' . fnameescape(file)
   " Jump to TODO: section if found
@@ -303,6 +437,17 @@ Then, when making a commit in Git,  hugo-utilities/<TODO: final script name>.sh 
 
 This not only integrates tasks with Git tracking, but keeps the TODO.TASKS file lean and focused.
 
+
+
+
+
+
+
+Historia humana est memoria universi. 
+  - Human history is the memory of the universe.
+
+Universum per homines sui meminit. 
+  - The universe, through humans, remembers itself.
 
 
 

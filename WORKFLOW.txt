@@ -73,14 +73,22 @@ Iterative process, 4 Kanban queues:
 
            - ex: 1850-12-11-Williamsburgh-Daily-Gazette-Brooklyn-NY-p2-q14.jpg
 
-    2. Process assets in the prep area.
+    2. Process assets in the prep area. ( MIRROR - PROCESS - MERGE )
 
        - cd to root of prep directory
        - see init.vim below, for definition of the nvim commands referenced 
 
-       - double-check filenames
-       - arrange files in a directory structure that mirrors the production site
+       - run mirrorimage.py to organize files in prep area
 
+           - this script/step bookends merge-images.py
+           - production image asset location is  $HUGOROOT/content/_assets/images  by convention
+           - run from top level of prep area, relative equivalent to $HUGOROOT/content/_assets/images
+
+           - interactively builds a directory path based on the directory structure of the production site asset area  
+           - creates directory structure in CWD
+           - enters vi to specify a bulk move script to move any existing files
+           - upon exiting vi, the bulk move script automatically runs
+       
        - run simpleproc.sh, which recursively:
 
            - fixes filenames (eliminate spaces, etc.)
@@ -103,8 +111,9 @@ Iterative process, 4 Kanban queues:
 
        - run merge-images.sh to merge all files in prep space to production assets location in Hugo
 
+           - this script/step bookends mirrorimage.py
            - production image asset location is  $HUGOROOT/content/_assets/images  by convention
-           - run from top level of prep area, relative equivalent to content/_assets/images/
+           - run from top level of prep area, relative equivalent to $HUGOROOT/content/_assets/images
            
            - optimizes image file sizes, losslessly, and only replaces files if the result is smaller. Preserves mtimes.
            - reports on file optimizations made 

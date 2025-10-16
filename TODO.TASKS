@@ -1,12 +1,22 @@
 # TODO: current prioritizd tasks
 TODO:
 
+
 # DONE: coding completed, will be included in next commit message
 DONE:
+
+- first use of tasks.vim in project
+- script naming conventions are a mess, at least remediate the main scripts:
+  - mirrorimage.sh      -> mirror-images.sh
+  - simpleproc.sh       -> process-images.sh
+  - simpleproc.template -> process-images.template
+  - merge-images.sh     -> merge-images.sh
+- general file cleanup, moving scripts to archive, etc.
+- updated commit.sh to call commit-tasks.py
+
+
 
 # BACKLOG: tasks not yet prioritized for immediate work
 BACKLOG:
 
 
-NEW:
-  - I want to add a new todo item to line 104 of emily's page  —  mills-mary-emily-1858.md:104

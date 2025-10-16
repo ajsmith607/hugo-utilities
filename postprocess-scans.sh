@@ -6,7 +6,7 @@
 
 # Files are scanned and a sequence number is appended to the filename pattern given.
 # So, for the pattern: "photo-group-sidea" saved as a tiff, 
-# the resulting filname is "photo-group-scan-sidea-1.tiff" . 
+# the resulting filename is "photo-group-scan-sidea-1.tiff" . 
 # This results in all sidea's being sorted in fileviewers before all sideb's.
 
 # This script will rename the files such that the appended sequence number for the file

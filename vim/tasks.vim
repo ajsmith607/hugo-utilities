@@ -53,14 +53,14 @@ endfunction
 nnoremap <silent> <leader>to :call OpenTodoTasks()<CR>
 
 " Normal mode: current line
-nnoremap <silent> <leader>tb :<C-U>call <SID>MoveRangeToSection('BACKLOG')<CR>
-nnoremap <silent> <leader>tt :<C-U>call <SID>MoveRangeToSection('TODO')<CR>
-nnoremap <silent> <leader>td :<C-U>call <SID>MoveRangeToSection('DONE')<CR>
+nnoremap <silent> <leader>tb :<C-U>call MoveRangeToSection('BACKLOG')<CR>
+nnoremap <silent> <leader>tt :<C-U>call MoveRangeToSection('TODO')<CR>
+nnoremap <silent> <leader>td :<C-U>call MoveRangeToSection('DONE')<CR>
 
 " Visual mode: selected range — NOTE the '<,'> to pass the range
-xnoremap <silent> <leader>tb :<C-U>'<,'>call <SID>MoveRangeToSection('BACKLOG')<CR>
-xnoremap <silent> <leader>tt :<C-U>'<,'>call <SID>MoveRangeToSection('TODO')<CR>
-xnoremap <silent> <leader>td :<C-U>'<,'>call <SID>MoveRangeToSection('DONE')<CR>
+xnoremap <silent> <leader>tb :<C-U>'<,'>call MoveRangeToSection('BACKLOG')<CR>
+xnoremap <silent> <leader>tt :<C-U>'<,'>call MoveRangeToSection('TODO')<CR>
+xnoremap <silent> <leader>td :<C-U>'<,'>call MoveRangeToSection('DONE')<CR>
 
 " Append current line or selection as a new task under NEW:
 " this allows me to define a new task or set of tasks in context,

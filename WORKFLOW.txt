@@ -49,7 +49,7 @@ Guiding Principles:
 Tasks and effort:
   - Effort pools around asset compiling and editing tasks, specifically:
       - Downloading and naming assets. Detailed format, but straightforward and relatively mindless, not needing a great deal of intellectual effort, keeping cognitive channels open for parallel multi-tasking with compatible tasks. The effort in this step is an investment that pays off in metadata generation and clear, logical file naming and sorting.
-      - Metadata and image processing before merging, again relatively straightforward, minimal intellectual effort. This is a "writing" process with reusable output, so directly contributes to output now, and is then avaliable to easily add value to other page content in the future.o
+      - Metadata and image processing before merging, again relatively straightforward, minimal intellectual effort. This is a "writing" process with reusable output, so directly contributes to output now, and is then avaliable to easily add value to other page content in the future.
 
   - And the most important task that brings everything together:
       - Editing! The opposite workflow characterstics of the other two tasks: little infrastructure effort, but heavy intellectual effort needed, requiring focus on multiple cognitive channels.
@@ -73,12 +73,12 @@ Iterative process, 4 Kanban queues:
 
            - ex: 1850-12-11-Williamsburgh-Daily-Gazette-Brooklyn-NY-p2-q14.jpg
 
-    2. Process assets in the prep area. ( MIRROR - PROCESS - MERGE )
+    2. Process assets in the prep area. ( MIRROR (in isolation) - PROCESS (add metadata) - MERGE (into production) )
 
        - cd to root of prep directory
        - see init.vim below, for definition of the nvim commands referenced 
 
-       - run mirrorimage.py to organize files in prep area
+       - run mirrorimage.py to organize files in prep area, using the same structure as the production area for easier merging
 
            - this script/step bookends merge-images.py
            - production image asset location is  $HUGOROOT/content/_assets/images  by convention
@@ -91,6 +91,7 @@ Iterative process, 4 Kanban queues:
        
        - run simpleproc.sh, which recursively:
 
+           - Uses ICE - Interactive Configuration Environment to dynamically edit a configuration file. See ICE.sh for details.
            - fixes filenames (eliminate spaces, etc.)
            - extracts jpgs from pdfs
            - checks for large files and reports them
@@ -108,6 +109,7 @@ Iterative process, 4 Kanban queues:
               - quit nvim to move onto next image
 
            - scripts all have sanity checks built-in to be non-destructive, and therefore, simpleproc can be rerun many times.
+           - edit metadata script tracks state and allows you to exit early and return to the same point later automatically
 
        - run merge-images.sh to merge all files in prep space to production assets location in Hugo
 
@@ -158,180 +160,7 @@ Iterative process, 4 Kanban queues:
 
         - commit and push to github (see commit.sh and push.sh)
 
-        
-
-init.vim configurations in NeoVim supporting the workflow described above
-
-" ---------------------------------
-" START HISTORY/HUGO workflow shortcuts
-
-" <leader>c: expode citation on current line
-au FileType ghmarkdown map <leader>ec ddk:r ! explode-cite.sh<CR>
-
-" <F2>: execute a bash script compile-assets.sh assumed to be in user PATH, 
-"       (undergo/scripts/compile-assets.sh a wrapper of compile-assets.py in the same directory) 
-"       then read file stored in the shell PWD into buffer cursor location, 
-"       then write buffer
-nnoremap <silent> <F2> :execute '! (cd ' . shellescape(g:startdir) . ' && compile-assets.sh)' <Bar> execute 'read ' . fnameescape(g:startdir . '/figstoadd.txt') <Bar> write<CR>
-
-" <leader>mo: open *.md file indicated by the path under the cursor (such as those in fig shortcodes) 
-augroup GHMarkdownOpen
-  autocmd!
-  autocmd FileType ghmarkdown execute 'setlocal path+=' . fnameescape(g:startdir . '/content/**')
-  autocmd FileType ghmarkdown setlocal suffixesadd+=.md
-  autocmd FileType ghmarkdown nnoremap <buffer> <leader>mo :execute 'find ' . expand('<cfile>')<CR>
-augroup END
-
-if !exists('g:startdir') | let g:startdir = expand('$PWD') | endif
-if !exists('g:pagedir') | let g:pagedir = '/content/family-of-edward-hallock-mills' | endif
-if !exists('g:imagedir') | let g:imagedir = '/content/_assets/images' | endif
-let g:image_exts = ['jpg','jpeg','png','gif','tif','tiff','bmp','webp']
-
-function! ResolveImagePath(raw)
-  return g:startdir . g:imagedir . '/' . a:raw
-endfunction
-
-function! FindImage(base)
-  for l:ext in g:image_exts
-    let l:cand = a:base . '.' . l:ext
-    if filereadable(l:cand)
-      return l:cand
-    endif
-  endfor
-  return ''
-endfunction
-
-function! GetBasename()
-  " full path to the current buffer (.md file)
-  let l:bufpath = expand('%:p')
-  " strip extension
-  let l:base = fnamemodify(l:bufpath, ':r')
-  return l:base
-endfunction
-
-function! OpenImage(viewer)
-  let l:raw  = GetBasename() 
-  let l:cand = FindImage(l:raw)
-  if empty(l:cand)
-    echohl ErrorMsg | echom 'No image found for ' . l:raw | echohl None
-    return
-  endif
-  if a:viewer ==# 'gimp'
-    call jobstart('swaymsg workspace 2; exec gimp ' . shellescape(l:cand), {'detach': v:true})
-  else
-    call jobstart([a:viewer,l:cand], {'detach': v:true})
-  endif
-endfunction
-
-function! InsertOcrText()
-  " full path to the current buffer (.md file)
-  let l:bufpath = expand('%:p')
-  " strip extension
-  let l:base = fnamemodify(l:bufpath, ':r')
-
-  " try extensions
-  for l:ext in g:image_exts
-    let l:cand = l:base . '.' . l:ext
-    if filereadable(l:cand)
-      let l:text = system(['ocrimage.sh', l:cand, 'stdout'])
-      call append(line('.'), split(l:text, "\n"))
-      "echom 'Inserted OCR from ' . l:cand
-      return
-    endif
-  endfor
-
-  echohl ErrorMsg | echom 'No image found for base: ' . l:base | echohl None
-endfunction
-
-augroup OpenImageMappings
-  autocmd!
-  " open with fim in current workspace
-  autocmd FileType ghmarkdown nnoremap <buffer> <leader>iv :call OpenImage('fim')<CR>
-  " open with gimp in workspace 2
-  autocmd FileType ghmarkdown nnoremap <buffer> <leader>ie :call OpenImage('gimp')<CR>
-  " insert OCR text under cursor line
-  autocmd FileType ghmarkdown nnoremap <buffer> <leader>it :call InsertOcrText()<CR>
-augroup END
-
-" support for pagelink shortcode    
-" <leader>ps : insert the shortcode boilerplate/skeleton (auto calls pf)
-" <leader>pf : type-ahead search and insert the basename of the desired page
-"              file
-"
-" Inserts the boilerplate and positions cursor before basename
-function! InsertPagelinkSkeleton()
-  " Insert the boilerplate
-  call nvim_put(['{{< pagelink "" "Optional Link Text" >}}'], 'c', v:true, v:true)
-  " Move cursor to the start of the line
-  normal! 0
-  " Search forward for the first "" and land on the first quote
-  call search('""', 'c')
-  " Move cursor one char to the right, inside the quotes
-  "normal! l
-  call InsertPageBasename(g:pagedir)
-endfunction
-
-nnoremap <leader>ps :call InsertPagelinkSkeleton()<CR>
-
-" support for fig shortcode    
-" <leader>fs : insert the shortcode boilerplate/skeleton (auto calls ff)
-" <leader>ff : type-ahead search and insert the basename of the desired
-"              metadata file
-"
-" Inserts the boilerplate and positions cursor before basename
-function! InsertFigSkeleton()
-  " Insert the boilerplate
-  call nvim_put(['{{< fig "" "800" >}}'], 'c', v:true, v:true)
-  " Move cursor to the start of the line
-  normal! 0
-  " Search forward for the first "" and land on the first quote
-  call search('""', 'c')
-  " Move cursor one char to the right, inside the quotes
-  "normal! l
-  call InsertPageBasename(g:imagedir, v:false)
-endfunction
-
-nnoremap <leader>fs :call InsertFigSkeleton()<CR>
-
-function! InsertPageBasename(subpath, ...) abort
-  " Build full path
-  let l:dir = expand(g:startdir . "/" . a:subpath)
-
-  " Base ripgrep command
-  let l:cmd = 'rg --files ' . shellescape(l:dir) . ' --glob "*.md" --glob "!**/*index*.md"'
-
-  " Determine fullstrip (default true)
-  let l:fullstrip = get(a:000, 0, v:true)
-
-  if l:fullstrip
-    " Strip directory + extension
-    let l:cmd .= " | sed 's#.*/##;s/\\.md$//'"
-  else
-    " Strip everything up through subpath/
-    let l:strip = substitute(l:dir, '/', '\\/', 'g')
-    let l:cmd .= " | sed 's#" . l:strip . "/##;s/\\.md$//'"
-  endif
-
-  call fzf#run(fzf#wrap({
-        \ 'source': l:cmd,
-        \ 'sink*': { lines -> s:InsertAtCursor(lines) },
-        \ }))
-endfunction
-
-function! s:InsertAtCursor(lines)
-  if len(a:lines) > 0
-    let l:word = a:lines[0]
-    " Insert exactly at cursor position
-    call nvim_put([l:word], 'c', v:true, v:true)
-  endif
-endfunction
-
-" Map it
-nnoremap <leader>pf :call InsertPageBasename(g:pagedir)<CR>
-nnoremap <leader>ff :call InsertPageBasename(g:imagedir, v:false)<CR>
-
-" END HISTORY workflow shortcuts
-" ---------------------------------
+See vim/history.vim for Vi keybindings supporting the workflow described above.
 
 
 Minimal task management
@@ -373,71 +202,9 @@ Workflow:
   - existing tasks in BACKLOG can be moved to TODO
   - existing tasks in TODO can be moved to COMPLETED
 
-This workflow can benefit from keybindings that facilitate moving items between sections efficiently, either defaulting to the current line under the cursor in normal mode, or a visual mode selection of an arbitrary number of adjacent tasks.
+Vim keybindings facilitate moving items between sections efficiently, either defaulting to the current line under the cursor in normal mode, or a visual mode selection of an arbitrary number of adjacent tasks. 
 
-
-----
-" init.vim additions
-" Minimal helpers for simple task management in TODO.TASKS
-
-" Minimal helpers for simple task management in TODO.TASKS
-function! OpenTodoTasks() abort
-  let file = g:startdir . '/TODO.TASKS'
-  if !filereadable(file)
-    call writefile([
-          \ '# TODO: current prioritized tasks',
-          \ 'TODO:',
-          \ '',
-          \ '# DONE: will be included in next commit message',
-          \ 'DONE:',
-          \ '',
-          \ '# BACKLOG: tasks not yet prioritized for immediate work',
-          \ 'BACKLOG:',
-          \ ''
-          \ ], file)
-  endif
-  execute 'edit ' . fnameescape(file)
-  " Jump to TODO: section if found
-  if search('^\s*TODO:\s*$', 'w') == 0
-    " fallback: put cursor at top if TODO: not found
-    normal! gg
-  endif
-endfunction
-
-function! s:FindOrCreateSection(name) abort
-  let l:pat = '^\s*' . a:name . ':\s*$'
-  let lnum = search(l:pat, 'nw')
-  if lnum == 0
-    call append(line('$'), '')
-    call append(line('$'), a:name . ':')
-    let lnum = line('$')
-  endif
-  return lnum
-endfunction
-
-function! s:MoveRangeToSection(section) range abort
-  let l:start = a:firstline
-  let l:end   = a:lastline
-  let l:lines = getline(l:start, l:end)
-  execute l:start . ',' . l:end . 'delete _'
-  let l:header = s:FindOrCreateSection(a:section)
-  call append(l:header, l:lines)
-endfunction
-
-" Open TODO.TASKS in CWD; create with section headers if missing
-nnoremap <silent> <leader>to :call OpenTodoTasks()<CR>
-
-" Normal mode: current line
-nnoremap <silent> <leader>tb :<C-U>call <SID>MoveRangeToSection('BACKLOG')<CR>
-nnoremap <silent> <leader>tt :<C-U>call <SID>MoveRangeToSection('TODO')<CR>
-nnoremap <silent> <leader>td :<C-U>call <SID>MoveRangeToSection('DONE')<CR>
-
-" Visual mode: selected range — NOTE the '<,'> to pass the range
-xnoremap <silent> <leader>tb :<C-U>'<,'>call <SID>MoveRangeToSection('BACKLOG')<CR>
-xnoremap <silent> <leader>tt :<C-U>'<,'>call <SID>MoveRangeToSection('TODO')<CR>
-xnoremap <silent> <leader>td :<C-U>'<,'>call <SID>MoveRangeToSection('DONE')<CR>
-----
-
+See vim/tasks.vim
 
 Then, when making a commit in Git,  hugo-utilities/<TODO: final script name>.sh  takes all tasks from the COMPLETED section and:
   - adds them to a vi buffer for editing as part of the commit message

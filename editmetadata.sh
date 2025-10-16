@@ -50,18 +50,9 @@ refocus_terminal() {
 }
 
 prompt_continue() {
-  while true; do
-    read -rsn1 -p "Press Enter to continue or Esc to quit..." key
-    echo
-    if [[ -z $key ]]; then
-      break
-    elif [[ $key == $'\e' ]]; then
-      echo "Exiting early at user request."
-      exit
-    else
-      echo "Invalid key, try again."
-    fi
-  done
+  echo
+  echo "Press ENTER to continue, or Ctrl+C to cancel..."
+  read -r _
 }
 
 edit_one() {

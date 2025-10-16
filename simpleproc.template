@@ -1,0 +1,22 @@
+# All variable definitions are optional
+# Scripts are designed to use intelligent defaults and to be non-destructive
+# Use bash syntax
+
+# --------
+# PDFTOJPG OPTIONS
+# --------
+
+extract="y" # ex: "y"
+
+
+# --------
+# CITIFY OPTIONS 
+# --------
+
+# define additional strings to add to citation metadata
+# <citepre><date>, <citetext><citepost>.
+citesub=""  # replace all citations with this text
+citepre=""  # prepend all citations with this text, end with period or comma, and space?
+citepost="" # append all citations with this text (leading period or comma, and space?, leave off last period!)
+
+

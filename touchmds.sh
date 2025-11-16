@@ -1,4 +1,11 @@
-#!/bin/bash 
+#!/usr/bin/env bash
+
+set -eEuo pipefail
+IFS=$'\n\t'
+trap 'echo "Error on line $LINENO"; exit 1' ERR
+
+# includes run_on_images function
+source common.sh
 
 # create any missing metadata files alongside images
 touch_file() {
@@ -8,10 +15,7 @@ touch_file() {
     [ -f "${mdfile}" ] || { touch "${mdfile}" ; } 
 }
 
-find ./ -type f \( -iname "*.jpg" -o -iname "*.png" \) -printf "%P\0" | sort -z | while read -rd $'\0' file; do
-    touch_file "$file"
-done
-
-    
+# pass all args directly to run_on_images
+run_on_images touch_file "${@:-.}"
 
 

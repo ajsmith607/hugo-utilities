@@ -1,4 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eEuo pipefail
+IFS=$'\n\t'
+trap 'echo "Error on line $LINENO"; exit 1' ERR
+
+source common.sh
 
 # for each metadata file, pre-populate initial metadata based on filename convention
 # metadata is prepended to any existing file content

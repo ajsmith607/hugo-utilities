@@ -23,6 +23,8 @@
 # Default documentation text
 #----------------------------------------------------------------------
 
+set -Eeuo pipefail
+
 # cleanly exit on Ctrl-C
 trap 'echo; echo "Cancelled by user."; exit 1' INT
 

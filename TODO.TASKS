@@ -1,18 +1,16 @@
 # TODO: current prioritizd tasks
 TODO:
 
+- verify on a real run:
+  - commit-tasks.py preserves indentation in commit message and clears DONE section
+
 
 # DONE: coding completed, will be included in next commit message
 DONE:
+- updates to commit-tasks.py:
+  - fixed sub-task indentation bug
+  - fixed DONE not clearing after copying to DONE.TASKS
 
-- first use of tasks.vim in project
-- script naming conventions are a mess, at least remediate the main scripts:
-  - mirrorimage.sh      -> mirror-images.sh
-  - simpleproc.sh       -> process-images.sh
-  - simpleproc.template -> process-images.template
-  - merge-images.sh     -> merge-images.sh
-- general file cleanup, moving scripts to archive, etc.
-- updated commit.sh to call commit-tasks.py
 
 
 

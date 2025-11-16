@@ -1,10 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eEuo pipefail
+IFS=$'\n\t'
+trap 'echo "Error on line $LINENO"; exit 1' ERR
+
+source common.sh
 
 # usage: ./pdftojpg.sh [file.pdf] [pages]
 # all arguments are optional
 # pages can be: "1", "1,3,5", "2-4", "1,3-5,7,9-10"
 # pages are 0 based!
-pages="" # can be any of the following formats: 1 -- 1,3,5 -- 2-4 -- 1,3-5,9-10
+# pages="" # can be any of the following formats: 1 -- 1,3,5 -- 2-4 -- 1,3-5,9-10
 # Convert all PDFs as before
 # > ./pdftojpg.sh
 
@@ -33,13 +39,9 @@ convert_pdf() {
     fi
 }
 
-if [[ -n "$1" ]]; then
-    # Single file provided
-    file="$1"
-    if [[ ! -f "$file" ]]; then
-        echo "Error: File not found: $file" >&2
-        exit 1
-    fi
+file="${1-}"
+if [[ -n "$file" ]]; then
+    check_file "$file"
     convert_pdf "$file" "$2"
 else
     # No arguments — process all PDFs

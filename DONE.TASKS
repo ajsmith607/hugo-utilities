@@ -1,0 +1,10 @@
+# 2025-10-15
+2025-10-15	first use of tasks.vim in project
+2025-10-15	script naming conventions are a mess, at least remediate the main scripts:
+2025-10-15	  mirrorimage.sh      -> mirror-images.sh
+2025-10-15	  simpleproc.sh       -> process-images.sh
+2025-10-15	  simpleproc.template -> process-images.template
+2025-10-15	  merge-images.sh     -> merge-images.sh
+2025-10-15	general file cleanup, moving scripts to archive, etc.
+2025-10-15	updated commit.sh to call commit-tasks.py
+

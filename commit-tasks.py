@@ -22,8 +22,7 @@ DONE_LOG  = os.environ.get("DONE_LOG",  "DONE.TASKS")
 SECTION_TODO = re.compile(r'^\s*TODO:\s*$', re.I)
 SECTION_DONE    = re.compile(r'^\s*DONE:\s*$', re.I)
 SECTION_BACKLOG = re.compile(r'^\s*BACKLOG:\s*$', re.I)
-
-BULLET = re.compile(r'^\s*-\s+(.+?)\s*$')   # capture after "- "
+BULLET = re.compile(r'^(\s*-\s+.*\S.*)$')
 COMMENT_OR_BLANK = re.compile(r'^\s*(#|$)')
 
 def parse_args():
@@ -54,7 +53,8 @@ def extract_done_lines_from_todo(path: Path) -> List[str]:
             continue
         if COMMENT_OR_BLANK.match(line):
             continue
-        m = BULLET.match(line)
+        # preserve leading spaces before "- "
+        m = re.match(r'^(\s*-\s+.*\S.*)$', line)
         if m:
             out.append(m.group(1))
     return out
@@ -148,8 +148,30 @@ def append_done_log(items: List[str]):
     with log.open("a", encoding="utf-8") as f:
         f.write(f"# {date}\n")
         for t in items:
-            f.write(f"{date}\t{t}\n")
+            f.write(f"{date}\t{t}\n".replace("\t", "    "))
         f.write("\n")
+
+def clear_done_bullets_in_todo(path: Path):
+    """Remove bullet lines (- ...) inside the DONE: section of TODO.TASKS."""
+    if not path.exists():
+        return
+    lines = path.read_text(encoding="utf-8").splitlines(True)  # keep \n endings
+    out = []
+    in_done = False
+    for line in lines:
+        if SECTION_DONE.match(line):
+            in_done = True
+            out.append(line)
+            continue
+        if SECTION_CURRENT.match(line) or SECTION_BACKLOG.match(line):
+            in_done = False
+        if in_done:
+            # skip bullet lines only (keep comments/blanks)
+            if re.match(r'^\s*-\s+.*$', line):
+                continue
+        out.append(line)
+    path.write_text("".join(out), encoding="utf-8")
+
 
 def main():
     args = parse_args()
@@ -186,6 +208,8 @@ def main():
         sys.stdout.write("----- END DONE LIST -----\n")
     else:
         append_done_log(completed)
+        # Clear DONE bullets from TODO.TASKS after successful commit
+        clear_done_bullets_in_todo(Path(TODO_FILE))
 
 if __name__ == "__main__":
     main()

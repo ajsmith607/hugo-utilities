@@ -60,14 +60,15 @@ def list_all_dirs(base):
         result.append(rel if rel != "." else "")
     return sorted(result)
 
+"""
+Use fzf to select or type a relative path from base.
+- Tab / Shift+Tab cycle through results
+- Live preview shows both subdirectories and visible files
+- Hidden items are excluded
+- Works when `echo '{}'` works in your shell
+"""
+
 def fzf_choose_path(base):
-    """
-    Use fzf to select or type a relative path from base.
-    - Tab / Shift+Tab cycle through results
-    - Live preview shows both subdirectories and visible files
-    - Hidden items are excluded
-    - Works when `echo '{}'` works in your shell
-    """
     dirs = list_all_dirs(base)
     prompt = f"{os.path.basename(base)}/ "
 
@@ -97,19 +98,32 @@ def fzf_choose_path(base):
         stdout=subprocess.PIPE,
     )
 
-    out = result.stdout.decode().splitlines()
-    if not out:
+    lines = result.stdout.decode().splitlines()
+    if not lines:
         return None
-    typed = out[0].strip()
-    selected = out[-1].strip() if len(out) > 1 else ""
-    rel_path = selected or typed
+
+    typed_query = lines[0].strip()
+    expect_key  = lines[1].strip() if len(lines) > 1 else None
+
+    # Real selection is AFTER the expect-key, not the expect-key itself
+    selected_item = lines[2].strip() if len(lines) > 2 else ""
+
+    rel_path = selected_item or typed_query
     return rel_path.strip("/")
+
+
+
+
+
+
+
 
 def make_mv_script(target_rel_path):
     files = [
         f for f in os.listdir(".")
         if os.path.isfile(f) and not f.startswith(".")
     ]
+    files.sort()
     lines = [
         f"# Target path (will be created if confirmed): {target_rel_path}",
         "",

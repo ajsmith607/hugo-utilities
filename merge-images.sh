@@ -53,7 +53,7 @@ fi
 
 # Prevent moving into a subdir of the source (would recurse forever)
 case "$DEST" in
-  "$SRC"/*) echo "ERROR: DEST ($DEST) is inside SRC ($SRC); aborting." >&2; exit 1;;
+    "$SRC"/*) echo "ERROR: DEST ($DEST) is inside SRC ($SRC); aborting." >&2; exit 1;;
 esac
 
 # ----- Build common rsync args -----

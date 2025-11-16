@@ -1,4 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -eEuo pipefail
+IFS=$'\n\t'
+trap 'echo "Error on line $LINENO"; exit 1' ERR
+
 # usage:
 #   ./checksizes.sh                 # all files, default 5M threshold
 #   ./checksizes.sh myfile.jpg      # single file, default 5M threshold

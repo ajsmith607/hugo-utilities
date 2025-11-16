@@ -130,21 +130,28 @@ Iterative process, 4 Kanban queues:
            - from Hugo root:
             
               - vi content/....
-              - <F2>: runs compile-assets.sh: updates asset cache, pastes figified list of new files under cursor, writes buffer
+              - <F2>: runs compile-assets.sh: 
 
+                  - updates asset cache 
+                  - copies new image assets to publish_dir (for static access in dev) 
+                  - pastes figified list of new files under cursor 
+                  - writes buffer
                   - automatically triggers running hugo server to reload asset JSON cache under /data 
                   - automatically triggers running hugo server to regenerate page content in buffer, browser reloads, navigates to change
 
                   - last incremental run new asset fig code can also be found in $HUGOROOT/figstoadd.txt 
 
-              - <leader>mo: on a fig shortcode path will open the corresponding *.md file 
-              - <leader>iv: within a *.md file will open the corresponding image in vimiv
+              - <leader>mo: on a fig shortcode path will open the corresponding *.md file (think:)
+              - <leader>iv: within a *.md file will open the corresponding image in vimiv (think: Image View)
+              - <leader>ie: within a *.md file will open the corresponding image in gimp (think: Image Edit)
 
               - continue editing page
 
         - in a separate terminal tab: 
 
-            - run.sh runs the development server with optimmized environment
+            - dev.sh runs the development server with optimmized environment
+                - removes draft status from scratch.md
+
             - compile-assets.sh can also be run here
 
         - Repeat at step 1 (Research and Compile) until finished
@@ -153,6 +160,7 @@ Iterative process, 4 Kanban queues:
 
         - stage.sh: 
 
+            - sets scratch.md to draft
             - updates modules and asset cache, builds site with optimized settings in /docs 
             - runs an httpd server on /docs, automatically loads the server home in browser 
 

@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# can be called with a single file propogated through other scripts
-# otherwise, each script will operate on all files in current directory, recursively
-# because each script is a separate function, they can be run independently
-# and are written to be non-destructive.
+set -eEuo pipefail
+IFS=$'\n\t'
+trap 'echo "Error on line $LINENO"; exit 1' ERR
+
+source common.sh
 
 source ICE.sh && ice_run "$@" || exit 1
 #     2. Optionally define:
@@ -18,12 +19,6 @@ echo "citepre: $citepre"
 echo "citepost: $citepost"
 echo
 
-if [[ -n "$file" ]]; then
-  if [[ ! -f "$file" ]]; then
-    echo "Error: File not found: $file" >&2
-    exit 1
-  fi
-fi
 
 # extract individual pages of PDFs as seperate images
 if [[ "$extract" == "y" ]]; then
@@ -32,14 +27,10 @@ if [[ "$extract" == "y" ]]; then
   pdftojpg.sh 
 fi
 
-# basic filename hygene
+# basic filename sanitization 
 echo
 echo "DETOXING"
-if [[ -n "$file" ]]; then
-    detox -r "$file" 
-else
-    detox -r . 
-fi
+detoxify.sh
 
 # review large image files
 echo

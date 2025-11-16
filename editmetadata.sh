@@ -1,5 +1,11 @@
-#!/bin/bash
-#
+#!/usr/bin/env bash
+
+set -eEuo pipefail
+IFS=$'\n\t'
+trap 'echo "Error on line $LINENO"; exit 1' ERR
+
+source common.sh
+
 # editmetadata.sh
 #
 # PURPOSE:
@@ -29,8 +35,6 @@
 #   Run with environment vars to change defaults:
 #       EDITOR=vim VIEWER=vimiv ./editmetadata.sh
 #
-
-set -u
 
 TRACKFILE=".edit-state"
 touch "$TRACKFILE"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# lossless-jpeg-opt.sh — strip non-essential metadata, optimize Huffman tables,
+# opt-jpg.sh — strip non-essential metadata, optimize Huffman tables,
 # convert to progressive (lossless re-encode). Keeps ICC profile for color.
 # Only replaces files if the result is smaller. Preserves mtimes.
 
@@ -17,6 +17,7 @@ tmpdir="$(mktemp -d)"; trap 'rm -rf "$tmpdir"' EXIT
 mapfile -d '' files < <(find . -type f \( -iname '*.jpg' -o -iname '*.jpeg' \) -print0)
 
 total_before=0 total_after=0
+
 for f in "${files[@]}"; do
   # absolute-safe paths
   abs="$(readlink -f -- "$f")"

@@ -1,29 +1,15 @@
 #!/bin/bash
 
-# check for uncomitted changed in a dependent repo
-# or override this safety feature
-if [ -z "${1}" ]; then
-    depRepo="../undergo"
-    if [ ! `realpath "${depRepo}"` == ${PWD} ]; then
-        if [[ `git -C "${depRepo}" status --porcelain --untracked-files=no` ]]; then
-            echo "there are uncommitted changes in ${depRepo}:"
-            echo `git -C "${depRepo}" status --porcelain --untracked-files=no` 
-            echo "output $?"
-            exit 
-        fi
-    fi
-fi
+# this should already be done before this is ever run?
+# compile-assets.sh
 
-# update modules
-hugo mod get -u
-
-compile-assets.sh
+toggle-draft.sh "content/family-of-edward-hallock-mills/scratch.md" "draft"
 
 # regenerate static site 
 # run image processing garbage collection 
 # to delete old generated files no longer neeeded
-hugo build --cleanDestinationDir --gc --minify 
-
+# hugo build --cleanDestinationDir --gc --minify 
+hugo build --gc --minify 
 
 # Function to stop both processes
 cleanup() {
@@ -39,7 +25,7 @@ trap cleanup SIGINT SIGTERM
 http-server docs/ &
 PID1=$!
 echo "Started process with PID $PID1"
-google-chrome "http://127.0.0.1:8089" > /dev/null 2>&1
+google-chrome "http://127.0.0.1:8080" > /dev/null 2>&1
 
 # Wait for process to finish
 wait $PID1

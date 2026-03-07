@@ -68,12 +68,12 @@ Iterative process, 4 Kanban queues:
            - this helps organize files and supports automated processing
            - use as much information as is available
            - use title casing, separate words with dashes
-           - states are two character uppercase abbrevations
+           - states are two character uppercase abbreviations
            - p = page, q = quaddress (explained elsewhere)
 
            - ex: 1850-12-11-Williamsburgh-Daily-Gazette-Brooklyn-NY-p2-q14.jpg
 
-    2. Process assets in the prep area. ( MIRROR (in isolation) - PROCESS (add metadata) - MERGE (into production) )
+    2. Process assets in prep area. ( MIRROR (in isolation) - PROCESS (add metadata) - MERGE (into production) )
 
        - cd to root of prep directory
        - see init.vim below, for definition of the nvim commands referenced 
@@ -89,7 +89,7 @@ Iterative process, 4 Kanban queues:
            - enters vi to specify a bulk move script to move any existing files
            - upon exiting vi, the bulk move script automatically runs
        
-       - run simpleproc.sh, which recursively:
+       - run process-images.sh, which recursively:
 
            - Uses ICE - Interactive Configuration Environment to dynamically edit a configuration file. See ICE.sh for details.
            - fixes filenames (eliminate spaces, etc.)
@@ -97,10 +97,7 @@ Iterative process, 4 Kanban queues:
            - checks for large files and reports them
            - creates a *.md file for each jpg, with same basename
            - populates the citation field of each *.md file, using the metadata embedded in the filename 
-           - opens each *.md file in nvim and the correspondig jpg in vimiv in the window next to it
-
-              - <leader>mo: from nvim in a *.md file will always open the corresponding image in separate window in vimiv
-              - vimiv is configured with go command (gimp-open) to edit in gimp
+           - opens each *.md file in nvim and the corresponding jpg in vimiv in the window next to it
 
               - manually adjust citation field to be properly formatted (my own format), can be left as is, or,
               - <leader>ec: while the cursor is on the citation line will "explode" the citation into individual fields. Verify results.
@@ -141,8 +138,8 @@ Iterative process, 4 Kanban queues:
 
                   - last incremental run new asset fig code can also be found in $HUGOROOT/figstoadd.txt 
 
-              - <leader>mo: on a fig shortcode path will open the corresponding *.md file (think:)
-              - <leader>iv: within a *.md file will open the corresponding image in vimiv (think: Image View)
+              - <leader>mo: on a fig shortcode path will open the corresponding *.md file (think: Metadata Open)
+              - <leader>iv: within a *.md file will open the corresponding image in vimiv (think: Image View) 
               - <leader>ie: within a *.md file will open the corresponding image in gimp (think: Image Edit)
 
               - continue editing page
@@ -214,7 +211,7 @@ Vim keybindings facilitate moving items between sections efficiently, either def
 
 See vim/tasks.vim
 
-Then, when making a commit in Git,  hugo-utilities/<TODO: final script name>.sh  takes all tasks from the COMPLETED section and:
+Then, when making a commit in Git,  hugo-utilities/commit.sh (which calls commit-tasks.py) takes all tasks from the COMPLETED section and:
   - adds them to a vi buffer for editing as part of the commit message
   - appends them to the DONE.TASKS file with the commit date as a log file
   - removes them from the COMPLETED section, which should be empty after every commit

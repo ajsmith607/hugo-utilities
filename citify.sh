@@ -30,11 +30,8 @@ citify_file() {
         basename="${filename%.*}"
         dirpath=$(dirname "$file")
        
-        date=`date -d "${basename:0:10}" +'%d %b %Y' 2> /dev/null` 
-        datevalidity=$? # get date command exit status
-        
         # check that we have a valid ISO date
-        if [ "${datevalidity}" -eq 0 ]; then
+        if date=$(date -d "${basename:0:10}" +'%d %b %Y' 2>/dev/null); then
             citetext=${basename:10}
         else
             date=""

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# bin/gcommit.py — commit helper with --dry-run and Python 3.7/3.8 typing compatibility
+# commit-tasks.py — commit helper with --dry-run and Python 3.7/3.8 typing compatibility
 # - Reads DONE items from TODO.TASKS
 # - Opens $EDITOR with a prefilled message (you edit freely)
 # - On real run: commits with that message and appends the final "# Completed" lines to DONE.TASKS

@@ -112,12 +112,6 @@ def fzf_choose_path(base):
     return rel_path.strip("/")
 
 
-
-
-
-
-
-
 def make_mv_script(target_rel_path):
     files = [
         f for f in os.listdir(".")

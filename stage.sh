@@ -4,6 +4,7 @@
 # compile-assets.sh
 
 toggle-draft.sh "content/family-of-edward-hallock-mills/scratch.md" "draft"
+generate-svg-pngs.py
 
 # regenerate static site 
 # run image processing garbage collection 
